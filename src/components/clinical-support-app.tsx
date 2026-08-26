@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Activity, ShieldCheck, Stethoscope } from "lucide-react";
+import { Activity, ShieldCheck } from "lucide-react";
 
 import { AnalysisLoading } from "@/src/components/analysis-loading";
 import { AnalysisResult } from "@/src/components/analysis-result";
 import { ClinicalForm } from "@/src/components/clinical-form";
 import { SystemStatus } from "@/src/components/system-status";
 import { Button } from "@/src/components/ui/button";
-import { Card } from "@/src/components/ui/card";
 import { analyzeCase, getApiErrorMessage } from "@/src/lib/api";
 import type {
   ClinicalAnalysis,
@@ -60,18 +59,22 @@ function validateForm(values: ClinicalFormValues, currentErrors: ClinicalFormErr
 
 function AppHeader() {
   return (
-    <header className="border-b border-slate-200/80 bg-white">
+    <header className="border-b border-line bg-background/95">
       <div className="mx-auto flex min-h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-white">
-            <Stethoscope aria-hidden="true" className="size-4" />
+          <div
+            aria-hidden="true"
+            className="relative size-9 shrink-0 rounded-[var(--radius-control)] bg-primary"
+          >
+            <span className="absolute left-1/2 top-2 h-5 w-1 -translate-x-1/2 rounded-[2px] bg-white" />
+            <span className="absolute left-2 top-1/2 h-1 w-5 -translate-y-1/2 rounded-[2px] bg-white" />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold tracking-tight text-slate-950">Clinical Support</p>
-            <p className="hidden truncate text-xs text-slate-500 sm:block">Sistema de apoyo a la decisión clínica</p>
+            <p className="truncate text-[13px] font-semibold tracking-tight text-ink">Clinical Support</p>
+            <p className="hidden truncate text-xs text-muted sm:block">Sistema de apoyo a la decisión clínica</p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2 text-xs font-medium text-slate-500">
+        <div className="flex shrink-0 items-center gap-2 text-xs font-medium text-muted">
           <SystemStatus />
         </div>
       </div>
@@ -81,9 +84,9 @@ function AppHeader() {
 
 function SafetyFooter() {
   return (
-    <footer className="border-t border-slate-200/80 bg-white">
-      <div className="mx-auto flex w-full max-w-6xl items-start gap-2 px-4 py-5 text-xs leading-5 text-slate-500 sm:px-6 lg:px-8">
-        <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-slate-400" />
+    <footer className="border-t border-line bg-background">
+      <div className="mx-auto flex w-full max-w-6xl items-start gap-2 px-4 py-5 text-xs leading-5 text-muted sm:px-6 lg:px-8">
+        <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />
         <p>Prototipo académico. La decisión clínica final corresponde al profesional de la salud.</p>
       </div>
     </footer>
@@ -92,21 +95,21 @@ function SafetyFooter() {
 
 function ErrorState({ message, onRetry, onNewAnalysis }: { message: string; onRetry: () => void; onNewAnalysis: () => void }) {
   return (
-    <section aria-labelledby="analysis-error-title" className="mx-auto flex w-full max-w-xl flex-col items-center py-8 text-center sm:py-16">
-      <div className="flex size-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-700">
+    <section aria-labelledby="analysis-error-title" className="mx-auto flex w-full max-w-xl flex-col items-center py-8 text-center sm:py-14">
+      <div className="flex size-14 items-center justify-center rounded-[var(--radius-panel)] border border-danger/20 bg-danger-soft text-danger">
         <Activity aria-hidden="true" className="size-8" />
       </div>
-      <h1 className="mt-6 text-3xl font-semibold tracking-tight text-slate-950" id="analysis-error-title">
+      <h1 className="mt-6 text-2xl font-semibold tracking-tight text-ink sm:text-3xl" id="analysis-error-title">
         No fue posible completar el análisis.
       </h1>
-      <p className="mt-3 text-base leading-7 text-slate-600">{message}</p>
-      <p className="mt-2 text-sm leading-6 text-slate-500">Verifique la conexión con el servicio e intente nuevamente.</p>
-      <Card className="mt-8 w-full p-5 text-left sm:p-6">
+      <p className="mt-3 text-base leading-7 text-muted">{message}</p>
+      <p className="mt-2 text-sm leading-6 text-muted">Verifique la conexión con el servicio e intente nuevamente.</p>
+      <div className="mt-8 w-full border-y border-line bg-surface px-5 py-5 text-left sm:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button className="w-full sm:w-auto" onClick={onRetry}>Reintentar</Button>
           <Button className="w-full sm:w-auto" variant="secondary" onClick={onNewAnalysis}>Nuevo análisis</Button>
         </div>
-      </Card>
+      </div>
     </section>
   );
 }
@@ -175,10 +178,10 @@ export function ClinicalSupportApp() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7fafb]">
+    <div className="flex min-h-screen flex-col bg-background">
       <AppHeader />
       <main className="flex-1">
-        <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+        <div className="mx-auto w-full max-w-6xl px-4 py-7 sm:px-6 sm:py-9 lg:px-8 lg:py-11">
           {viewState === "form" ? (
             <ClinicalForm
               errors={errors}

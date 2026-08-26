@@ -1,15 +1,6 @@
-import {
-  AlertCircle,
-  BookOpen,
-  CheckCircle2,
-  FileText,
-  Info,
-  Stethoscope,
-  TriangleAlert,
-} from "lucide-react";
+import { AlertCircle, CheckCircle2, Info, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/src/components/ui/button";
-import { Card } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils";
 import type {
   ClinicalAnalysis,
@@ -53,44 +44,57 @@ const knownImageMessages: Record<string, string> = {
 
 function SectionHeading({
   children,
-  icon: Icon,
   id,
+  eyebrow,
 }: {
   children: string;
-  icon: typeof FileText;
   id: string;
+  eyebrow?: string;
 }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
-        <Icon aria-hidden="true" className="size-4" />
-      </div>
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight text-slate-950" id={id}>
-          {children}
-        </h2>
-      </div>
+    <div className="border-b border-line pb-3">
+      {eyebrow ? (
+        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+          {eyebrow}
+        </p>
+      ) : null}
+      <h2 className="text-base font-semibold tracking-tight text-ink" id={id}>
+        {children}
+      </h2>
     </div>
   );
 }
 
 function EmptyMessage({ children }: { children: string }) {
-  return <p className="mt-5 text-sm leading-6 text-slate-500">{children}</p>;
+  return <p className="mt-4 text-sm leading-6 text-muted">{children}</p>;
 }
 
-function DifferentialItem({ item }: { item: DifferentialDiagnosis }) {
+function DifferentialItem({
+  index,
+  item,
+}: {
+  index: number;
+  item: DifferentialDiagnosis;
+}) {
   return (
-    <li className="border-t border-slate-100 py-5 first:border-t-0 first:pt-0 last:pb-0">
-      <h3 className="text-sm font-semibold leading-6 text-slate-900">{item.diagnosis}</h3>
-      <p className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Elementos relacionados</p>
-      <ul className="mt-2 space-y-2">
-        {item.reasoning.map((reason) => (
-          <li className="flex gap-2 text-sm leading-6 text-slate-600" key={reason}>
-            <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-teal-600" />
-            <span>{reason}</span>
-          </li>
-        ))}
-      </ul>
+    <li className="grid grid-cols-[2rem_minmax(0,1fr)] gap-3 border-t border-line py-5 first:border-t-0 first:pt-0 last:pb-0">
+      <span className="pt-0.5 font-mono text-xs font-medium text-primary">
+        {String(index).padStart(2, "0")}
+      </span>
+      <div>
+        <h3 className="text-sm font-semibold leading-6 text-ink">{item.diagnosis}</h3>
+        <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+          Elementos relacionados
+        </p>
+        <ul className="mt-2 space-y-2">
+          {item.reasoning.map((reason) => (
+            <li className="flex gap-2 text-sm leading-6 text-muted" key={reason}>
+              <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
+              <span>{reason}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </li>
   );
 }
@@ -107,14 +111,17 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
 
   return (
     <section aria-labelledby="analysis-result-title" className="mx-auto w-full max-w-5xl">
-      <header className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <header className="mb-8 flex flex-col gap-5 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">Apoyo a la decisión clínica</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl" id="analysis-result-title">
+          <p className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+            <span aria-hidden="true" className="h-px w-7 bg-primary" />
+            Apoyo a la decisión clínica
+          </p>
+          <h1 className="text-[clamp(1.9rem,4vw,2.55rem)] font-semibold tracking-[-0.03em] text-ink" id="analysis-result-title">
             Resultado del análisis
           </h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Análisis <span className="font-mono text-xs text-slate-600">#{analysis.analysisId.slice(0, 8)}</span>
+          <p className="mt-2 text-sm text-muted">
+            ID del análisis <span className="font-mono text-xs text-ink">#{analysis.analysisId.slice(0, 8)}</span>
           </p>
         </div>
         <Button className="w-full sm:w-auto" variant="secondary" onClick={onNewAnalysis}>
@@ -122,208 +129,214 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         </Button>
       </header>
 
-      <div className="space-y-5">
-        <Card className="overflow-hidden">
-          <div className="border-b border-slate-100 p-5 sm:p-7">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Evaluación inicial</p>
-                <h2 className="mt-2 text-lg font-semibold text-slate-950">Calidad de la imagen</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                  {knownImageMessages[analysis.imageQuality.message] ?? analysis.imageQuality.message}
-                </p>
-              </div>
-              <span
-                className={cn(
-                  "inline-flex w-fit shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold",
-                  qualityIsAdequate ? "bg-teal-50 text-teal-800" : "bg-amber-50 text-amber-800",
-                )}
-              >
-                {qualityIsAdequate ? (
-                  <CheckCircle2 aria-hidden="true" className="size-4" />
-                ) : (
-                  <AlertCircle aria-hidden="true" className="size-4" />
-                )}
-                {imageQualityLabels[analysis.imageQuality.status]}
-              </span>
-            </div>
+      <div className="border-y border-line bg-surface">
+        <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-6">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Evaluación inicial</p>
+            <h2 className="mt-2 text-base font-semibold tracking-tight text-ink">Calidad de la imagen</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
+              {knownImageMessages[analysis.imageQuality.message] ?? analysis.imageQuality.message}
+            </p>
           </div>
+          <span
+            className={cn(
+              "inline-flex w-fit shrink-0 items-center gap-2 rounded-[var(--radius-control)] border px-3 py-1.5 text-xs font-semibold",
+              qualityIsAdequate
+                ? "border-success/20 bg-success-soft text-success"
+                : "border-warning/25 bg-warning-soft text-warning",
+            )}
+          >
+            {qualityIsAdequate ? (
+              <CheckCircle2 aria-hidden="true" className="size-4" />
+            ) : (
+              <AlertCircle aria-hidden="true" className="size-4" />
+            )}
+            {imageQualityLabels[analysis.imageQuality.status]}
+          </span>
+        </div>
+      </div>
 
-          <div className="grid gap-8 p-5 sm:p-7 lg:grid-cols-2 lg:gap-12">
-            <section aria-labelledby="findings-title">
-              <SectionHeading icon={Stethoscope} id="findings-title">
-                Posibles hallazgos
-              </SectionHeading>
-              {analysis.possibleFindings.length ? (
-                <ul className="mt-5 space-y-3">
-                  {analysis.possibleFindings.map((finding) => (
-                    <li className="rounded-xl border border-slate-200 bg-slate-50/70 p-4" key={`${finding.finding}-${finding.confidence}`}>
-                      <p className="text-sm font-medium leading-6 text-slate-900">{finding.finding}</p>
-                      <p className="mt-3 text-xs font-medium text-slate-500">
-                        Confianza del análisis visual: <span className="font-semibold text-slate-700">{confidenceLabels[finding.confidence]}</span>
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <EmptyMessage>El análisis no registró posibles hallazgos.</EmptyMessage>
+      <div className="mt-9 grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.7fr)] lg:gap-x-12">
+        <div className="min-w-0 space-y-10">
+          <section aria-labelledby="findings-title">
+            <SectionHeading eyebrow="Lectura visual" id="findings-title">
+              Posibles hallazgos
+            </SectionHeading>
+            {analysis.possibleFindings.length ? (
+              <ul className="mt-5 space-y-4">
+                {analysis.possibleFindings.map((finding) => (
+                  <li className="border-l-2 border-primary/30 py-1 pl-4" key={`${finding.finding}-${finding.confidence}`}>
+                    <p className="text-sm font-semibold leading-6 text-ink">{finding.finding}</p>
+                    <p className="mt-2 text-xs text-muted">
+                      Confianza del análisis visual:{" "}
+                      <span className="font-semibold text-ink">{confidenceLabels[finding.confidence]}</span>
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyMessage>El análisis no registró posibles hallazgos.</EmptyMessage>
+            )}
+          </section>
+
+          <section aria-labelledby="differentials-title">
+            <SectionHeading eyebrow="Correlación clínica" id="differentials-title">
+              Diagnósticos diferenciales
+            </SectionHeading>
+            <p className="mt-3 text-sm leading-6 text-muted">
+              Son posibilidades para correlacionar con la valoración clínica; no son diagnósticos confirmados.
+            </p>
+            {analysis.differentialDiagnoses.length ? (
+              <ul className="mt-5">
+                {analysis.differentialDiagnoses.map((item, index) => (
+                  <DifferentialItem index={index + 1} item={item} key={item.diagnosis} />
+                ))}
+              </ul>
+            ) : (
+              <EmptyMessage>El análisis no registró diagnósticos diferenciales.</EmptyMessage>
+            )}
+          </section>
+        </div>
+
+        <aside className="min-w-0 space-y-8">
+          <section aria-labelledby="red-flags-title">
+            <div
+              className={cn(
+                "rounded-[var(--radius-panel)] border p-4",
+                hasRedFlags
+                  ? "border-danger/25 bg-danger-soft"
+                  : "border-line bg-surface-subtle",
               )}
-            </section>
-
-            <section aria-labelledby="differentials-title">
-              <SectionHeading icon={FileText} id="differentials-title">
-                Diagnósticos diferenciales
-              </SectionHeading>
-              <p className="mt-3 text-sm leading-6 text-slate-500">
-                Son posibilidades para correlacionar con la valoración clínica; no son diagnósticos confirmados.
-              </p>
-              {analysis.differentialDiagnoses.length ? (
-                <ul className="mt-5">
-                  {analysis.differentialDiagnoses.map((item) => (
-                    <DifferentialItem item={item} key={item.diagnosis} />
-                  ))}
-                </ul>
-              ) : (
-                <EmptyMessage>El análisis no registró diagnósticos diferenciales.</EmptyMessage>
-              )}
-            </section>
-          </div>
-        </Card>
-
-        <div className="grid gap-5 lg:grid-cols-2">
-          <Card className={hasRedFlags ? "border-rose-200 bg-rose-50/40" : "border-slate-200 bg-white"}>
-            <div className="p-5 sm:p-6">
+            >
               <div className="flex items-start gap-3">
-                <div
-                  className={cn(
-                    "flex size-9 shrink-0 items-center justify-center rounded-lg",
-                    hasRedFlags ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-600",
-                  )}
-                >
-                  <TriangleAlert aria-hidden="true" className="size-4" />
-                </div>
+                <TriangleAlert
+                  aria-hidden="true"
+                  className={cn("mt-0.5 size-4 shrink-0", hasRedFlags ? "text-danger" : "text-muted")}
+                />
                 <div>
-                  <h2 className={cn("text-lg font-semibold tracking-tight", hasRedFlags ? "text-rose-950" : "text-slate-950")}>Signos de alarma</h2>
-                  <p className={cn("mt-1 text-sm leading-6", hasRedFlags ? "text-rose-900/70" : "text-slate-500")}>
-                    {hasRedFlags ? "Revise estos puntos durante la valoración clínica." : "No se identificaron alertas adicionales dentro de la información procesada."}
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Prioridad clínica</p>
+                  <h2 className={cn("mt-1 text-base font-semibold tracking-tight", hasRedFlags ? "text-danger" : "text-ink")} id="red-flags-title">
+                    Signos de alarma
+                  </h2>
+                  <p className={cn("mt-2 text-sm leading-6", hasRedFlags ? "text-danger/85" : "text-muted")}>
+                    {hasRedFlags
+                      ? "Revise estos puntos durante la valoración clínica."
+                      : "No se identificaron alertas adicionales dentro de la información procesada."}
                   </p>
                 </div>
               </div>
               {hasRedFlags ? (
-                <ul className="mt-5 space-y-3">
+                <ul className="mt-5 space-y-3 border-t border-danger/15 pt-4">
                   {analysis.redFlags.map((flag) => (
-                    <li className="flex gap-2 text-sm leading-6 text-rose-950" key={flag}>
-                      <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-rose-600" />
+                    <li className="flex gap-2 text-sm leading-6 text-danger" key={flag}>
+                      <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-danger" />
                       <span>{flag}</span>
                     </li>
                   ))}
                 </ul>
               ) : null}
             </div>
-          </Card>
+          </section>
 
-          <Card>
-            <div className="p-5 sm:p-6">
-              <SectionHeading icon={Info} id="missing-information-title">
-                Información que sería útil complementar
-              </SectionHeading>
-              {analysis.missingInformation.length ? (
-                <ul className="mt-5 space-y-3">
-                  {analysis.missingInformation.map((item) => (
-                    <li className="flex gap-2 text-sm leading-6 text-slate-600" key={item}>
-                      <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-amber-500" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <EmptyMessage>No se señalaron datos faltantes en este análisis.</EmptyMessage>
-              )}
-            </div>
-          </Card>
-        </div>
-
-        <Card>
-          <div className="p-5 sm:p-6">
-            <SectionHeading icon={Stethoscope} id="referral-title">
-              Canalización
+          <section aria-labelledby="missing-information-title">
+            <SectionHeading eyebrow="Completitud clínica" id="missing-information-title">
+              Información que sería útil complementar
             </SectionHeading>
-            <div
-              className={cn(
-                "mt-5 rounded-xl border p-4",
-                referralNeedsAttention ? "border-amber-200 bg-amber-50/60" : "border-slate-200 bg-slate-50/70",
-              )}
-            >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-950">{referralTitle}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{analysis.referral.reason}</p>
-                </div>
-                <span className="inline-flex w-fit shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-slate-200">
-                  Prioridad: {priorityLabels[analysis.referral.priority]}
-                </span>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="p-5 sm:p-6">
-            <SectionHeading icon={BookOpen} id="sources-title">
-              Fuentes consultadas
-            </SectionHeading>
-            {analysis.sources.length ? (
-              <ul className="mt-5 divide-y divide-slate-100">
-                {analysis.sources.map((source) => (
-                  <li className="py-4 first:pt-0 last:pb-0" key={`${source.document}-${source.page ?? "none"}`}>
-                    <p className="text-sm font-semibold leading-6 text-slate-900">{source.title}</p>
-                    <dl className="mt-2 grid gap-1 text-sm leading-6 text-slate-600 sm:grid-cols-3 sm:gap-x-4">
-                      <div>
-                        <dt className="inline text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Institución: </dt>
-                        <dd className="inline">{source.source}</dd>
-                      </div>
-                      <div>
-                        <dt className="inline text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Documento: </dt>
-                        <dd className="inline">{source.document}</dd>
-                      </div>
-                      {source.page ? (
-                        <div>
-                          <dt className="inline text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Página: </dt>
-                          <dd className="inline">{source.page}</dd>
-                        </div>
-                      ) : null}
-                    </dl>
+            {analysis.missingInformation.length ? (
+              <ul className="mt-5 space-y-3">
+                {analysis.missingInformation.map((item) => (
+                  <li className="flex gap-2 text-sm leading-6 text-muted" key={item}>
+                    <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-warning" />
+                    <span>{item}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <EmptyMessage>No se recuperaron fuentes documentales para este análisis.</EmptyMessage>
+              <EmptyMessage>No se señalaron datos faltantes en este análisis.</EmptyMessage>
             )}
-          </div>
-        </Card>
+          </section>
 
-        <Card className="border-slate-300 bg-slate-50/80">
-          <div className="p-5 sm:p-6">
-            <SectionHeading icon={Info} id="limitations-title">
-              Alcance del resultado
+          <section aria-labelledby="referral-title">
+            <SectionHeading eyebrow="Siguiente consideración" id="referral-title">
+              Canalización
             </SectionHeading>
-            <ul className="mt-5 space-y-3">
-              {analysis.limitations.map((limitation) => (
-                <li className="flex gap-2 text-sm leading-6 text-slate-600" key={limitation}>
-                  <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-slate-500" />
-                  <span>{limitation}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-5 flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-700">
-              <Info aria-hidden="true" className="mt-1 size-4 shrink-0 text-teal-700" />
-              <p>
-                Este prototipo funciona como apoyo a la decisión clínica. No sustituye la valoración, el diagnóstico ni el criterio de un profesional de la salud.
-              </p>
+            <div
+              className={cn(
+                "mt-4 border-l-2 px-4 py-1",
+                referralNeedsAttention ? "border-warning bg-warning-soft" : "border-line-strong bg-surface-subtle",
+              )}
+            >
+              <div className="flex flex-col gap-3">
+                <h3 className="text-sm font-semibold leading-6 text-ink">{referralTitle}</h3>
+                <span className="inline-flex w-fit rounded-[var(--radius-control)] border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-ink">
+                  Prioridad: {priorityLabels[analysis.referral.priority]}
+                </span>
+                <p className="text-sm leading-6 text-muted">{analysis.referral.reason}</p>
+              </div>
             </div>
-          </div>
-        </Card>
+          </section>
+        </aside>
       </div>
+
+      <section aria-labelledby="sources-title" className="mt-11 border-t border-line pt-8">
+        <SectionHeading eyebrow="Evidencia documental" id="sources-title">
+          Fuentes consultadas
+        </SectionHeading>
+        {analysis.sources.length ? (
+          <ol className="mt-5 divide-y divide-line">
+            {analysis.sources.map((source, index) => (
+              <li className="grid grid-cols-[2rem_minmax(0,1fr)] gap-3 py-5 first:pt-0 last:pb-0" key={`${source.document}-${source.page ?? "none"}`}>
+                <span className="pt-0.5 font-mono text-xs font-medium text-primary">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <p className="text-sm font-semibold leading-6 text-ink">{source.title}</p>
+                  <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm leading-5 text-muted sm:grid-cols-3">
+                    <div>
+                      <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Institución</dt>
+                      <dd className="mt-1">{source.source}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Documento</dt>
+                      <dd className="mt-1 break-words">{source.document}</dd>
+                    </div>
+                    {source.page ? (
+                      <div>
+                        <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Página</dt>
+                        <dd className="mt-1">{source.page}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <EmptyMessage>No se recuperaron fuentes documentales para este análisis.</EmptyMessage>
+        )}
+      </section>
+
+      <section aria-labelledby="limitations-title" className="mt-11 border-t border-line pt-8">
+        <div className="rounded-[var(--radius-panel)] border border-line bg-surface-subtle p-5 sm:p-6">
+          <SectionHeading eyebrow="Transparencia" id="limitations-title">
+            Alcance del resultado
+          </SectionHeading>
+          <ul className="mt-5 space-y-3">
+            {analysis.limitations.map((limitation) => (
+              <li className="flex gap-2 text-sm leading-6 text-muted" key={limitation}>
+                <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-muted" />
+                <span>{limitation}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-5 flex items-start gap-3 rounded-[var(--radius-control)] border border-line-strong bg-surface px-4 py-3 text-sm leading-6 text-ink">
+            <Info aria-hidden="true" className="mt-1 size-4 shrink-0 text-primary" />
+            <p>
+              Este prototipo funciona como apoyo a la decisión clínica. No sustituye la valoración, el diagnóstico ni el criterio de un profesional de la salud.
+            </p>
+          </div>
+        </div>
+      </section>
 
       <div className="flex justify-center py-8 sm:py-10">
         <Button variant="secondary" onClick={onNewAnalysis}>

@@ -91,8 +91,8 @@ export function ImageUpload({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-dashed bg-slate-50/70 p-4 sm:p-5",
-        error ? "border-rose-300 bg-rose-50/40" : "border-slate-300",
+        "rounded-[var(--radius-control)] border border-dashed bg-surface-subtle p-4 sm:p-5",
+        error ? "border-danger/45 bg-danger-soft" : "border-line-strong",
       )}
     >
       <input
@@ -115,7 +115,7 @@ export function ImageUpload({
 
       {file && previewUrl ? (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-950 sm:size-32 sm:shrink-0">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-control)] border border-line bg-ink sm:size-32 sm:shrink-0">
             <Image
               alt={`Vista previa de ${file.name}`}
               className="size-full object-contain"
@@ -129,13 +129,13 @@ export function ImageUpload({
             <div className="flex items-start gap-3">
               <FileImage
                 aria-hidden="true"
-                className="mt-0.5 size-5 shrink-0 text-teal-700"
+                className="mt-0.5 size-5 shrink-0 text-primary"
               />
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">
+                <p className="truncate text-sm font-semibold text-ink">
                   {file.name}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-muted">
                   {formatFileSize(file.size)} · Imagen lista para enviar
                 </p>
               </div>
@@ -163,15 +163,15 @@ export function ImageUpload({
       ) : (
         <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-control)] bg-primary-soft text-primary">
               <ImagePlus aria-hidden="true" className="size-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-900">Radiografía</p>
-              <p className="mt-1 max-w-md text-sm leading-5 text-slate-500">
+              <p className="text-sm font-semibold text-ink">Radiografía</p>
+              <p className="mt-1 max-w-md text-sm leading-5 text-muted">
                 Suba una imagen existente o tome una fotografía.
               </p>
-              <p className="mt-2 text-xs text-slate-400">JPEG, JPG, PNG o WEBP · máximo 10 MB</p>
+              <p className="mt-2 text-xs text-muted">JPEG, JPG, PNG o WEBP · máximo 10 MB</p>
             </div>
           </div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
@@ -195,11 +195,11 @@ export function ImageUpload({
         </div>
       )}
 
-      <p className="mt-4 border-t border-slate-200/80 pt-3 text-xs leading-5 text-slate-500">
+      <p className="mt-4 border-t border-line pt-3 text-xs leading-5 text-muted">
         La calidad de la imagen puede afectar el análisis del prototipo.
       </p>
       {error ? (
-        <p className="mt-2 text-sm font-medium text-rose-700" role="alert">
+        <p className="mt-2 text-sm font-medium text-danger" role="alert">
           {error}
         </p>
       ) : null}

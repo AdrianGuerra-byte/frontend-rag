@@ -8,13 +8,13 @@ import { getHealth } from "@/src/lib/api";
 type Status = "checking" | "available" | "ai-unavailable" | "offline";
 
 const statusContent: Record<Exclude<Status, "checking">, { label: string; mobileLabel: string; tone: string }> = {
-  available: { label: "Sistema disponible", mobileLabel: "Disponible", tone: "text-teal-700" },
+  available: { label: "Sistema disponible", mobileLabel: "Disponible", tone: "text-success" },
   "ai-unavailable": {
     label: "Servicio de IA no disponible",
     mobileLabel: "IA no disponible",
-    tone: "text-amber-700",
+    tone: "text-warning",
   },
-  offline: { label: "Backend sin conexión", mobileLabel: "Sin conexión", tone: "text-rose-700" },
+  offline: { label: "Backend sin conexión", mobileLabel: "Sin conexión", tone: "text-danger" },
 };
 
 export function SystemStatus() {
@@ -61,7 +61,7 @@ export function SystemStatus() {
 
   if (status === "checking") {
     return (
-      <div aria-live="polite" className="flex items-center gap-2 text-xs font-medium text-slate-400" role="status">
+      <div aria-live="polite" className="flex items-center gap-2 text-xs font-medium text-muted" role="status">
         <LoaderCircle aria-hidden="true" className="size-3.5 animate-spin" />
         Verificando conexión
       </div>
@@ -78,7 +78,7 @@ export function SystemStatus() {
       <span className="hidden sm:inline">{content.label}</span>
       <button
         aria-label="Verificar conexión nuevamente"
-        className="rounded-md p-1 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600/40"
+        className="rounded-md p-1 transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
         type="button"
         onClick={() => {
           setStatus("checking");

@@ -1,11 +1,10 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { AlertCircle, ArrowRight, ClipboardList } from "lucide-react";
 
 import { ImageUpload } from "@/src/components/image-upload";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { Select } from "@/src/components/ui/select";
@@ -33,7 +32,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   }
 
   return (
-    <p className="mt-1.5 flex items-center gap-1.5 text-sm text-rose-700" id={id} role="alert">
+    <p className="mt-1.5 flex items-center gap-1.5 text-sm text-danger" id={id} role="alert">
       <AlertCircle aria-hidden="true" className="size-4 shrink-0" />
       {message}
     </p>
@@ -42,9 +41,31 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 
 function RequiredMark() {
   return (
-    <span aria-hidden="true" className="ml-1 text-rose-600">
+    <span aria-hidden="true" className="ml-1 text-danger">
       *
     </span>
+  );
+}
+
+function FormSectionHeading({
+  index,
+  title,
+  description,
+}: {
+  index: string;
+  title: ReactNode;
+  description: string;
+}) {
+  return (
+    <div className="mb-5 flex items-start gap-3">
+      <span className="pt-0.5 font-mono text-[11px] font-medium tracking-[0.12em] text-primary">
+        {index}
+      </span>
+      <div>
+        <h2 className="text-base font-semibold tracking-tight text-ink">{title}</h2>
+        <p className="mt-1 text-sm leading-5 text-muted">{description}</p>
+      </div>
+    </div>
   );
 }
 
@@ -60,23 +81,24 @@ export function ClinicalForm({
 }: ClinicalFormProps) {
   return (
     <section aria-labelledby="new-analysis-title" className="mx-auto w-full max-w-4xl">
-      <div className="mb-6 max-w-2xl">
-        <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">
-          <ClipboardList aria-hidden="true" className="size-4" />
-          Flujo clínico
+      <div className="mb-8 max-w-2xl">
+        <div className="mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+          <span aria-hidden="true" className="h-px w-7 bg-primary" />
+          <ClipboardList aria-hidden="true" className="size-3.5" />
+          Ingreso clínico
         </div>
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl" id="new-analysis-title">
+        <h1 className="text-[clamp(1.9rem,4vw,2.55rem)] font-semibold tracking-[-0.03em] text-ink" id="new-analysis-title">
           Nuevo análisis clínico
         </h1>
-        <p className="mt-3 text-base leading-7 text-slate-600 sm:text-lg">
+        <p className="mt-3 text-[15px] leading-7 text-muted sm:text-base">
           Registre la información clínica disponible y adjunte la radiografía para obtener una segunda opinión asistida.
         </p>
       </div>
 
       {formMessage ? (
         <div
-          aria-live="polite"
-          className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        aria-live="polite"
+          className="mb-5 flex items-start gap-3 rounded-[var(--radius-control)] border border-warning/25 bg-warning-soft px-4 py-3 text-sm text-warning"
           role="alert"
         >
           <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
@@ -84,16 +106,16 @@ export function ClinicalForm({
         </div>
       ) : null}
 
-      <Card>
-        <CardContent className="p-5 sm:p-7">
-          <form className="space-y-8" noValidate onSubmit={onSubmit}>
-            <div>
-              <div className="mb-4">
-                <h2 className="text-base font-semibold text-slate-950">Información de la consulta</h2>
-                <p className="mt-1 text-sm text-slate-500">Complete los campos requeridos para contextualizar la imagen.</p>
-              </div>
+      <div className="overflow-hidden rounded-[var(--radius-panel)] border border-line bg-surface">
+        <form className="divide-y divide-line" noValidate onSubmit={onSubmit}>
+          <div className="px-5 py-6 sm:px-8 sm:py-7">
+            <FormSectionHeading
+              description="Complete los campos requeridos para contextualizar la imagen."
+              index="01"
+              title="Datos del paciente"
+            />
 
-              <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid gap-5 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="age">
                     Edad<RequiredMark />
@@ -137,10 +159,16 @@ export function ClinicalForm({
                   </Select>
                   <FieldError id="sex-error" message={errors.sex} />
                 </div>
-              </div>
             </div>
+          </div>
 
-            <div className="grid gap-5 border-t border-slate-100 pt-8">
+          <div className="grid gap-5 px-5 py-6 sm:px-8 sm:py-7">
+            <FormSectionHeading
+              description="Registre los datos disponibles de la valoración actual."
+              index="02"
+              title="Información clínica"
+            />
+            <div className="grid gap-5">
               <div>
                 <Label htmlFor="chiefComplaint">
                   Motivo de consulta<RequiredMark />
@@ -207,37 +235,36 @@ export function ClinicalForm({
                 <FieldError id="medicalHistory-error" message={errors.medicalHistory} />
               </div>
             </div>
+          </div>
 
-            <div className="border-t border-slate-100 pt-8">
-              <div className="mb-4">
-                <h2 className="text-base font-semibold text-slate-950">
-                  Imagen del estudio<RequiredMark />
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">Adjunte una radiografía para realizar el análisis visual.</p>
-              </div>
-              <ImageUpload
-                error={errors.image}
-                file={values.image}
-                onFileSelect={onImageSelect}
-                onRemove={onImageRemove}
-              />
-              {!errors.image ? (
-                <p className="mt-2 text-xs text-slate-500">Campo requerido para este flujo radiográfico.</p>
-              ) : null}
-            </div>
+          <div className="px-5 py-6 sm:px-8 sm:py-7">
+            <FormSectionHeading
+              description="Suba una imagen existente o tome una fotografía desde el dispositivo."
+              index="03"
+              title={<>Estudio radiográfico<RequiredMark /></>}
+            />
+            <ImageUpload
+              error={errors.image}
+              file={values.image}
+              onFileSelect={onImageSelect}
+              onRemove={onImageRemove}
+            />
+            {!errors.image ? (
+              <p className="mt-2 text-xs text-muted">Campo requerido para este flujo radiográfico.</p>
+            ) : null}
+          </div>
 
-            <div className="flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs leading-5 text-slate-500">
-                <RequiredMark /> Campos requeridos
-              </p>
-              <Button className="w-full sm:w-auto sm:min-w-48" disabled={isSubmitDisabled} type="submit">
-                Analizar caso
-                <ArrowRight aria-hidden="true" className="size-4" />
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          <div className="flex flex-col gap-4 bg-surface-subtle px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+            <p className="text-xs leading-5 text-muted">
+              <RequiredMark /> Campos requeridos
+            </p>
+            <Button className="w-full sm:w-auto sm:min-w-48" disabled={isSubmitDisabled} type="submit">
+              Analizar caso
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Button>
+          </div>
+        </form>
+      </div>
     </section>
   );
 }

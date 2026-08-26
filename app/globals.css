@@ -1,27 +1,78 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7fafb;
-  --foreground: #0f172a;
+  color-scheme: light;
+
+  --background: #f4f7f6;
+  --surface: #ffffff;
+  --surface-subtle: #edf3f1;
+  --surface-strong: #e1ebe7;
+  --foreground: #172522;
+  --muted: #657773;
+  --border: #d7e2de;
+  --border-strong: #bdcec8;
+
+  --primary: #0d5a55;
+  --primary-hover: #084b47;
+  --primary-soft: #e3f0ed;
+
+  --success: #226b58;
+  --success-soft: #e7f3ef;
+  --warning: #946117;
+  --warning-soft: #fff4dc;
+  --danger: #b1443f;
+  --danger-soft: #fff0ee;
+  --info: #456b78;
+  --info-soft: #edf4f6;
+
+  --radius-control: 8px;
+  --radius-panel: 10px;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, monospace;
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-strong: var(--surface-strong);
+  --color-ink: var(--foreground);
+  --color-muted: var(--muted);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --font-sans: "Inter", "Helvetica Neue", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 ::selection {
-  background: #ccfbf1;
-  color: #134e4a;
+  background: var(--primary-soft);
+  color: var(--primary-hover);
 }
 
 @media (prefers-reduced-motion: reduce) {
