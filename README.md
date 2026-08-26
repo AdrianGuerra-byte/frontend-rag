@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Clinical Support
 
-## Getting Started
+Frontend Next.js del prototipo académico de apoyo a la decisión clínica. Permite registrar un caso, adjuntar una radiografía y mostrar el resultado estructurado que devuelve el backend FastAPI. No realiza diagnósticos ni sustituye el criterio de un profesional de la salud.
 
-First, run the development server:
+## Requisitos
+
+- Node.js 20 o superior
+- pnpm 11
+- Backend FastAPI disponible por HTTP/HTTPS
+
+## Instalación y desarrollo local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000). El archivo `.env.local` debe apuntar al backend:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+El frontend no incluye un proxy ni una ruta API propia. Durante el desarrollo, Next.js usa `http://localhost:3000` y FastAPI `http://localhost:8000`; el backend debe permitir el origen del frontend mediante CORS.
 
-## Learn More
+## API utilizada
 
-To learn more about Next.js, take a look at the following resources:
+El módulo `src/lib/api.ts` centraliza las llamadas a:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `GET /health`
+- `POST /api/analyze` con `multipart/form-data` y los campos `age`, `sex`, `chief_complaint`, `symptoms`, `signs`, `medical_history` e `image`
+- `GET /api/analyses`
+- `GET /api/analyses/{id}`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+El resultado se valida contra el contrato real del backend: `analysisId`, `imageQuality`, `possibleFindings`, `differentialDiagnoses`, `redFlags`, `missingInformation`, `referral`, `sources` y `limitations`.
 
-## Deploy on Vercel
+El análisis tarda hasta 120 segundos antes de mostrar un error de timeout. La ausencia de Ollama no bloquea el formulario: el indicador informa el estado y deja que FastAPI aplique su modo de respaldo.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Verificación
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm lint
+pnpm exec tsc --noEmit
+pnpm build
+```
+
+`pnpm build` usa el compilador Webpack integrado de Next.js para mantener un build reproducible en el entorno actual. No se requiere un servidor Node personalizado.
+
+## Despliegue en Vercel
+
+1. Importe este proyecto en Vercel.
+2. Mantenga el framework como Next.js y el comando de build estándar (`pnpm build`).
+3. Configure la variable de entorno `NEXT_PUBLIC_API_URL` con la URL HTTPS pública del backend FastAPI, por ejemplo `https://api.example.com`.
+4. En FastAPI, agregue el dominio de Vercel a `CORS_ORIGINS`.
+5. Despliegue y pruebe el flujo desde un teléfono y un escritorio.
+
+No exponga Ollama directamente. Si aparece un error CORS, el origen que falta debe agregarse en la configuración CORS del backend; el navegador no se puede corregir de forma segura desde este frontend.
+
+## Alcance actual
+
+- El flujo principal está conectado al backend real; no queda un mock local en el flujo normal.
+- No se implementaron autenticación, persistencia frontend, exportación PDF ni dashboard.
+- Se omitió “Análisis recientes” porque `GET /api/analyses` actualmente devuelve solamente una lista de resultados `ClinicalAnalysis`, sin fecha, motivo de consulta ni estado. Agregar esa sección requeriría ampliar el contrato del backend.
+- El backend inspeccionado devuelve algunos mensajes y contenido generado en inglés; las etiquetas y la navegación del frontend están en español y no se traducen automáticamente los textos clínicos devueltos para evitar alterar su significado.
