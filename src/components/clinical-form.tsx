@@ -58,11 +58,12 @@ function FormSectionHeading({
 }) {
   return (
     <div className="mb-5 flex items-start gap-3">
-      <span className="pt-0.5 font-mono text-[11px] font-medium tracking-[0.12em] text-primary">
+      <div className="flex shrink-0 items-center gap-1 pt-0.5 font-mono text-[11px] font-medium tracking-[0.12em] text-primary">
         {index}
-      </span>
+        <span aria-hidden="true" className="text-muted/60">/</span>
+      </div>
       <div>
-        <h2 className="text-base font-semibold tracking-tight text-ink">{title}</h2>
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink">{title}</h2>
         <p className="mt-1 text-sm leading-5 text-muted">{description}</p>
       </div>
     </div>
@@ -80,24 +81,23 @@ export function ClinicalForm({
   onValueChange,
 }: ClinicalFormProps) {
   return (
-    <section aria-labelledby="new-analysis-title" className="mx-auto w-full max-w-4xl">
-      <div className="mb-8 max-w-2xl">
-        <div className="mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-          <span aria-hidden="true" className="h-px w-7 bg-primary" />
+    <section aria-labelledby="new-analysis-title" className="mx-auto w-full max-w-[640px]">
+      <div className="mb-7 max-w-xl">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
           <ClipboardList aria-hidden="true" className="size-3.5" />
-          Ingreso clínico
+          Caso sin guardar
         </div>
-        <h1 className="text-[clamp(1.9rem,4vw,2.55rem)] font-semibold tracking-[-0.03em] text-ink" id="new-analysis-title">
+        <h1 className="text-[clamp(1.8rem,4vw,2.25rem)] font-semibold tracking-[-0.03em] text-ink" id="new-analysis-title">
           Nuevo análisis clínico
         </h1>
-        <p className="mt-3 text-[15px] leading-7 text-muted sm:text-base">
+        <p className="mt-3 text-[15px] leading-6 text-muted">
           Registre la información clínica disponible y adjunte la radiografía para obtener una segunda opinión asistida.
         </p>
       </div>
 
       {formMessage ? (
         <div
-        aria-live="polite"
+          aria-live="polite"
           className="mb-5 flex items-start gap-3 rounded-[var(--radius-control)] border border-warning/25 bg-warning-soft px-4 py-3 text-sm text-warning"
           role="alert"
         >
@@ -106,9 +106,8 @@ export function ClinicalForm({
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-[var(--radius-panel)] border border-line bg-surface">
-        <form className="divide-y divide-line" noValidate onSubmit={onSubmit}>
-          <div className="px-5 py-6 sm:px-8 sm:py-7">
+      <form className="relative" noValidate onSubmit={onSubmit}>
+          <div className="border-t border-line py-6 sm:py-7">
             <FormSectionHeading
               description="Complete los campos requeridos para contextualizar la imagen."
               index="01"
@@ -116,7 +115,7 @@ export function ClinicalForm({
             />
 
             <div className="grid gap-5 sm:grid-cols-2">
-                <div>
+              <div>
                   <Label htmlFor="age">
                     Edad<RequiredMark />
                   </Label>
@@ -135,9 +134,9 @@ export function ClinicalForm({
                     onChange={(event) => onValueChange("age", event.target.value)}
                   />
                   <FieldError id="age-error" message={errors.age} />
-                </div>
+              </div>
 
-                <div>
+              <div>
                   <Label htmlFor="sex">
                     Sexo<RequiredMark />
                   </Label>
@@ -158,11 +157,11 @@ export function ClinicalForm({
                     <option value="other">Otro / No especificado</option>
                   </Select>
                   <FieldError id="sex-error" message={errors.sex} />
-                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-5 px-5 py-6 sm:px-8 sm:py-7">
+          <div className="grid gap-5 border-t border-line py-6 sm:py-7">
             <FormSectionHeading
               description="Registre los datos disponibles de la valoración actual."
               index="02"
@@ -237,7 +236,7 @@ export function ClinicalForm({
             </div>
           </div>
 
-          <div className="px-5 py-6 sm:px-8 sm:py-7">
+          <div className="border-t border-line py-6 sm:py-7">
             <FormSectionHeading
               description="Suba una imagen existente o tome una fotografía desde el dispositivo."
               index="03"
@@ -254,17 +253,16 @@ export function ClinicalForm({
             ) : null}
           </div>
 
-          <div className="flex flex-col gap-4 bg-surface-subtle px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-            <p className="text-xs leading-5 text-muted">
+          <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t border-line bg-surface/95 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-sm sm:static sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-5 sm:backdrop-blur-none">
+            <p className="text-xs leading-5 text-muted sm:order-first">
               <RequiredMark /> Campos requeridos
             </p>
-            <Button className="w-full sm:w-auto sm:min-w-48" disabled={isSubmitDisabled} type="submit">
+            <Button className="w-full sm:order-last sm:w-auto sm:min-w-48" disabled={isSubmitDisabled} type="submit">
               Analizar caso
               <ArrowRight aria-hidden="true" className="size-4" />
             </Button>
           </div>
-        </form>
-      </div>
+      </form>
     </section>
   );
 }

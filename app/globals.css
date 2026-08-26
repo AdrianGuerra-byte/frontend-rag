@@ -75,6 +75,22 @@ textarea {
   color: var(--primary-hover);
 }
 
+@keyframes clinical-scan {
+  0%,
+  100% {
+    transform: translateY(-3.5rem);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(3.5rem);
+    opacity: 0.85;
+  }
+}
+
+.clinical-scan-line {
+  animation: clinical-scan 2.8s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -83,5 +99,9 @@ textarea {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  .clinical-scan-line {
+    animation: none;
   }
 }

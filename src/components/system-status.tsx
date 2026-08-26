@@ -1,20 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CircleCheck, CircleOff, LoaderCircle, RefreshCw, TriangleAlert } from "lucide-react";
+import { LoaderCircle, RefreshCw } from "lucide-react";
 
 import { getHealth } from "@/src/lib/api";
 
 type Status = "checking" | "available" | "ai-unavailable" | "offline";
 
-const statusContent: Record<Exclude<Status, "checking">, { label: string; mobileLabel: string; tone: string }> = {
-  available: { label: "Sistema disponible", mobileLabel: "Disponible", tone: "text-success" },
+const statusContent: Record<Exclude<Status, "checking">, { label: string; mobileLabel: string; tone: string; dot: string }> = {
+  available: { label: "Sistema disponible", mobileLabel: "Disponible", tone: "text-success", dot: "bg-success" },
   "ai-unavailable": {
     label: "Servicio de IA no disponible",
     mobileLabel: "IA no disponible",
     tone: "text-warning",
+    dot: "bg-warning",
   },
-  offline: { label: "Backend sin conexión", mobileLabel: "Sin conexión", tone: "text-danger" },
+  offline: { label: "Backend sin conexión", mobileLabel: "Sin conexión", tone: "text-danger", dot: "bg-danger" },
 };
 
 export function SystemStatus() {
@@ -69,16 +70,15 @@ export function SystemStatus() {
   }
 
   const content = statusContent[status];
-  const Icon = status === "available" ? CircleCheck : status === "offline" ? CircleOff : TriangleAlert;
 
   return (
     <div className={`flex items-center gap-2 text-xs font-medium ${content.tone}`}>
-      <Icon aria-hidden="true" className="size-3.5" />
+      <span aria-hidden="true" className={`size-1.5 rounded-full ${content.dot}`} />
       <span className="sm:hidden">{content.mobileLabel}</span>
       <span className="hidden sm:inline">{content.label}</span>
       <button
         aria-label="Verificar conexión nuevamente"
-        className="rounded-md p-1 transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+        className="-mr-2 flex size-11 items-center justify-center rounded-md transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
         type="button"
         onClick={() => {
           setStatus("checking");

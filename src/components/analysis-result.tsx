@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Info, TriangleAlert } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info, Plus, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
@@ -46,18 +46,20 @@ function SectionHeading({
   children,
   id,
   eyebrow,
+  index,
 }: {
   children: string;
   id: string;
-  eyebrow?: string;
+  eyebrow: string;
+  index: string;
 }) {
   return (
     <div className="border-b border-line pb-3">
-      {eyebrow ? (
-        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-          {eyebrow}
-        </p>
-      ) : null}
+      <p className="mb-1 flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+        <span>{index}</span>
+        <span aria-hidden="true" className="text-muted/60">/</span>
+        <span>{eyebrow}</span>
+      </p>
       <h2 className="text-base font-semibold tracking-tight text-ink" id={id}>
         {children}
       </h2>
@@ -110,18 +112,18 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
       : "No se determinó una necesidad inmediata de canalización";
 
   return (
-    <section aria-labelledby="analysis-result-title" className="mx-auto w-full max-w-5xl">
-      <header className="mb-8 flex flex-col gap-5 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between">
+    <section aria-labelledby="analysis-result-title" className="mx-auto w-full max-w-[760px]">
+      <header className="mb-7 flex flex-col gap-5 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-            <span aria-hidden="true" className="h-px w-7 bg-primary" />
-            Apoyo a la decisión clínica
+          <p className="mb-3 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
+            Caso / {analysis.analysisId.slice(0, 8)}
           </p>
-          <h1 className="text-[clamp(1.9rem,4vw,2.55rem)] font-semibold tracking-[-0.03em] text-ink" id="analysis-result-title">
+          <h1 className="text-[clamp(1.8rem,4vw,2.3rem)] font-semibold tracking-[-0.03em] text-ink" id="analysis-result-title">
             Resultado del análisis
           </h1>
           <p className="mt-2 text-sm text-muted">
-            ID del análisis <span className="font-mono text-xs text-ink">#{analysis.analysisId.slice(0, 8)}</span>
+            Apoyo a la decisión clínica · Resultado no diagnóstico
           </p>
         </div>
         <Button className="w-full sm:w-auto" variant="secondary" onClick={onNewAnalysis}>
@@ -156,10 +158,53 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         </div>
       </div>
 
+      <section aria-labelledby="red-flags-title" className="mt-6">
+        <div
+          className={cn(
+            "rounded-[var(--radius-panel)] border p-4 sm:p-5",
+            hasRedFlags
+              ? "border-danger/25 bg-danger-soft"
+              : "border-line bg-surface-subtle",
+          )}
+        >
+          <div className="flex items-start gap-3">
+            <TriangleAlert
+              aria-hidden="true"
+              className={cn("mt-0.5 size-4 shrink-0", hasRedFlags ? "text-danger" : "text-muted")}
+            />
+            <div>
+              <p className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                <span>03</span>
+                <span aria-hidden="true">/</span>
+                <span>Prioridad clínica</span>
+              </p>
+              <h2 className={cn("mt-1 text-base font-semibold tracking-tight", hasRedFlags ? "text-danger" : "text-ink")} id="red-flags-title">
+                Signos de alarma
+              </h2>
+              <p className={cn("mt-2 text-sm leading-6", hasRedFlags ? "text-danger/85" : "text-muted")}>
+                {hasRedFlags
+                  ? "Revise estos puntos durante la valoración clínica."
+                  : "No se identificaron alertas adicionales dentro de la información procesada."}
+              </p>
+            </div>
+          </div>
+          {hasRedFlags ? (
+            <ul className="mt-5 space-y-3 border-t border-danger/15 pt-4">
+              {analysis.redFlags.map((flag) => (
+                <li className="flex gap-2 text-sm leading-6 text-danger" key={flag}>
+                  <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-danger" />
+                  <span>{flag}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      </section>
+
       <div className="mt-9 grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.7fr)] lg:gap-x-12">
         <div className="min-w-0 space-y-10">
           <section aria-labelledby="findings-title">
-            <SectionHeading eyebrow="Lectura visual" id="findings-title">
+            <SectionHeading eyebrow="Lectura visual" id="findings-title" index="01">
               Posibles hallazgos
             </SectionHeading>
             {analysis.possibleFindings.length ? (
@@ -180,7 +225,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
           </section>
 
           <section aria-labelledby="differentials-title">
-            <SectionHeading eyebrow="Correlación clínica" id="differentials-title">
+            <SectionHeading eyebrow="Correlación clínica" id="differentials-title" index="02">
               Diagnósticos diferenciales
             </SectionHeading>
             <p className="mt-3 text-sm leading-6 text-muted">
@@ -199,47 +244,8 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         </div>
 
         <aside className="min-w-0 space-y-8">
-          <section aria-labelledby="red-flags-title">
-            <div
-              className={cn(
-                "rounded-[var(--radius-panel)] border p-4",
-                hasRedFlags
-                  ? "border-danger/25 bg-danger-soft"
-                  : "border-line bg-surface-subtle",
-              )}
-            >
-              <div className="flex items-start gap-3">
-                <TriangleAlert
-                  aria-hidden="true"
-                  className={cn("mt-0.5 size-4 shrink-0", hasRedFlags ? "text-danger" : "text-muted")}
-                />
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Prioridad clínica</p>
-                  <h2 className={cn("mt-1 text-base font-semibold tracking-tight", hasRedFlags ? "text-danger" : "text-ink")} id="red-flags-title">
-                    Signos de alarma
-                  </h2>
-                  <p className={cn("mt-2 text-sm leading-6", hasRedFlags ? "text-danger/85" : "text-muted")}>
-                    {hasRedFlags
-                      ? "Revise estos puntos durante la valoración clínica."
-                      : "No se identificaron alertas adicionales dentro de la información procesada."}
-                  </p>
-                </div>
-              </div>
-              {hasRedFlags ? (
-                <ul className="mt-5 space-y-3 border-t border-danger/15 pt-4">
-                  {analysis.redFlags.map((flag) => (
-                    <li className="flex gap-2 text-sm leading-6 text-danger" key={flag}>
-                      <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-danger" />
-                      <span>{flag}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          </section>
-
           <section aria-labelledby="missing-information-title">
-            <SectionHeading eyebrow="Completitud clínica" id="missing-information-title">
+            <SectionHeading eyebrow="Completitud clínica" id="missing-information-title" index="04">
               Información que sería útil complementar
             </SectionHeading>
             {analysis.missingInformation.length ? (
@@ -257,7 +263,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
           </section>
 
           <section aria-labelledby="referral-title">
-            <SectionHeading eyebrow="Siguiente consideración" id="referral-title">
+            <SectionHeading eyebrow="Siguiente consideración" id="referral-title" index="05">
               Canalización
             </SectionHeading>
             <div
@@ -279,7 +285,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
       </div>
 
       <section aria-labelledby="sources-title" className="mt-11 border-t border-line pt-8">
-        <SectionHeading eyebrow="Evidencia documental" id="sources-title">
+        <SectionHeading eyebrow="Evidencia documental" id="sources-title" index="06">
           Fuentes consultadas
         </SectionHeading>
         {analysis.sources.length ? (
@@ -318,7 +324,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
 
       <section aria-labelledby="limitations-title" className="mt-11 border-t border-line pt-8">
         <div className="rounded-[var(--radius-panel)] border border-line bg-surface-subtle p-5 sm:p-6">
-          <SectionHeading eyebrow="Transparencia" id="limitations-title">
+          <SectionHeading eyebrow="Transparencia" id="limitations-title" index="07">
             Alcance del resultado
           </SectionHeading>
           <ul className="mt-5 space-y-3">
@@ -340,6 +346,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
 
       <div className="flex justify-center py-8 sm:py-10">
         <Button variant="secondary" onClick={onNewAnalysis}>
+          <Plus aria-hidden="true" className="size-4" />
           Nuevo análisis
         </Button>
       </div>

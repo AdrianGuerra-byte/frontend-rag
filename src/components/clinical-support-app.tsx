@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Activity, ShieldCheck } from "lucide-react";
+import { Activity } from "lucide-react";
 
 import { AnalysisLoading } from "@/src/components/analysis-loading";
 import { AnalysisResult } from "@/src/components/analysis-result";
@@ -9,6 +9,7 @@ import { ClinicalForm } from "@/src/components/clinical-form";
 import { SystemStatus } from "@/src/components/system-status";
 import { Button } from "@/src/components/ui/button";
 import { analyzeCase, getApiErrorMessage } from "@/src/lib/api";
+import { cn } from "@/src/lib/utils";
 import type {
   ClinicalAnalysis,
   ClinicalFormErrors,
@@ -26,6 +27,13 @@ const initialValues: ClinicalFormValues = {
   signs: "",
   medicalHistory: "",
   image: null,
+};
+
+const screenContent: Record<ViewState, { eyebrow: string; title: string }> = {
+  form: { eyebrow: "CLINICAL SUPPORT / 01", title: "Nuevo análisis" },
+  loading: { eyebrow: "CLINICAL SUPPORT / ANÁLISIS", title: "Procesando caso" },
+  result: { eyebrow: "CLINICAL SUPPORT / RESULTADO", title: "Resultado del análisis" },
+  error: { eyebrow: "CLINICAL SUPPORT / ESTADO", title: "No se pudo completar" },
 };
 
 function validateForm(values: ClinicalFormValues, currentErrors: ClinicalFormErrors) {
@@ -57,21 +65,33 @@ function validateForm(values: ClinicalFormValues, currentErrors: ClinicalFormErr
   return errors;
 }
 
-function AppHeader() {
+function ProductMark() {
   return (
-    <header className="border-b border-line bg-background/95">
-      <div className="mx-auto flex min-h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+    <span aria-hidden="true" className="relative size-8 shrink-0 text-primary">
+      <span className="absolute left-0 top-0 size-2.5 border-l border-t border-current" />
+      <span className="absolute right-0 top-0 size-2.5 border-r border-t border-current" />
+      <span className="absolute bottom-0 left-0 size-2.5 border-b border-l border-current" />
+      <span className="absolute bottom-0 right-0 size-2.5 border-b border-r border-current" />
+      <span className="absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current" />
+    </span>
+  );
+}
+
+function AppHeader({ viewState }: { viewState: ViewState }) {
+  const content = screenContent[viewState];
+
+  return (
+    <header className="sticky top-0 z-20 border-b border-line bg-surface/95 pt-[env(safe-area-inset-top)] backdrop-blur-sm">
+      <div className="mx-auto flex min-h-16 w-full max-w-[760px] items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
-          <div
-            aria-hidden="true"
-            className="relative size-9 shrink-0 rounded-[var(--radius-control)] bg-primary"
-          >
-            <span className="absolute left-1/2 top-2 h-5 w-1 -translate-x-1/2 rounded-[2px] bg-white" />
-            <span className="absolute left-2 top-1/2 h-1 w-5 -translate-y-1/2 rounded-[2px] bg-white" />
-          </div>
+          <ProductMark />
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-semibold tracking-tight text-ink">Clinical Support</p>
-            <p className="hidden truncate text-xs text-muted sm:block">Sistema de apoyo a la decisión clínica</p>
+            <p className="truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+              {content.eyebrow}
+            </p>
+            <p className="mt-0.5 truncate text-sm font-semibold tracking-tight text-ink">
+              {content.title}
+            </p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2 text-xs font-medium text-muted">
@@ -79,17 +99,6 @@ function AppHeader() {
         </div>
       </div>
     </header>
-  );
-}
-
-function SafetyFooter() {
-  return (
-    <footer className="border-t border-line bg-background">
-      <div className="mx-auto flex w-full max-w-6xl items-start gap-2 px-4 py-5 text-xs leading-5 text-muted sm:px-6 lg:px-8">
-        <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />
-        <p>Prototipo académico. La decisión clínica final corresponde al profesional de la salud.</p>
-      </div>
-    </footer>
   );
 }
 
@@ -178,32 +187,38 @@ export function ClinicalSupportApp() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <AppHeader />
-      <main className="flex-1">
-        <div className="mx-auto w-full max-w-6xl px-4 py-7 sm:px-6 sm:py-9 lg:px-8 lg:py-11">
-          {viewState === "form" ? (
-            <ClinicalForm
-              errors={errors}
-              formMessage={errorMessage}
-              isSubmitDisabled={isFormIncomplete}
-              values={values}
-              onImageRemove={handleImageRemove}
-              onImageSelect={handleImageSelect}
-              onSubmit={handleSubmit}
-              onValueChange={handleValueChange}
-            />
-          ) : null}
-          {viewState === "loading" ? <AnalysisLoading /> : null}
-          {viewState === "result" && analysis ? (
-            <AnalysisResult analysis={analysis} onNewAnalysis={resetExperience} />
-          ) : null}
-          {viewState === "error" && errorMessage ? (
-            <ErrorState message={errorMessage} onNewAnalysis={resetExperience} onRetry={() => void submitAnalysis()} />
-          ) : null}
-        </div>
-      </main>
-      <SafetyFooter />
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto flex min-h-screen w-full max-w-[820px] flex-col bg-surface md:border-x md:border-line">
+        <AppHeader viewState={viewState} />
+        <main className="flex-1">
+          <div
+            className={cn(
+              "mx-auto w-full px-4 py-6 pb-8 sm:px-6 sm:py-8 sm:pb-10",
+              viewState === "result" ? "max-w-[780px]" : "max-w-[680px]",
+            )}
+          >
+            {viewState === "form" ? (
+              <ClinicalForm
+                errors={errors}
+                formMessage={errorMessage}
+                isSubmitDisabled={isFormIncomplete}
+                values={values}
+                onImageRemove={handleImageRemove}
+                onImageSelect={handleImageSelect}
+                onSubmit={handleSubmit}
+                onValueChange={handleValueChange}
+              />
+            ) : null}
+            {viewState === "loading" ? <AnalysisLoading /> : null}
+            {viewState === "result" && analysis ? (
+              <AnalysisResult analysis={analysis} onNewAnalysis={resetExperience} />
+            ) : null}
+            {viewState === "error" && errorMessage ? (
+              <ErrorState message={errorMessage} onNewAnalysis={resetExperience} onRetry={() => void submitAnalysis()} />
+            ) : null}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
