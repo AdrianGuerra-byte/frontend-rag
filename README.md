@@ -19,10 +19,10 @@ pnpm dev
 Abra [http://localhost:3000](http://localhost:3000). El archivo `.env.local` debe apuntar al backend:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=https://hoyt-uncautious-jonnie.ngrok-free.dev
 ```
 
-El frontend no incluye un proxy ni una ruta API propia. Durante el desarrollo, Next.js usa `http://localhost:3000` y FastAPI `http://localhost:8000`; el backend debe permitir el origen del frontend mediante CORS.
+El frontend no incluye un proxy ni una ruta API propia. La URL pública anterior también queda como respaldo en `src/lib/api.ts`; `NEXT_PUBLIC_API_URL` puede sobrescribirla. El backend debe permitir el origen del frontend mediante CORS.
 
 ## API utilizada
 
@@ -51,7 +51,7 @@ pnpm build
 
 1. Importe este proyecto en Vercel.
 2. Mantenga el framework como Next.js y el comando de build estándar (`pnpm build`).
-3. Configure la variable de entorno `NEXT_PUBLIC_API_URL` con la URL HTTPS pública del backend FastAPI, por ejemplo `https://api.example.com`.
+3. Configure `NEXT_PUBLIC_API_URL` con la URL HTTPS pública de FastAPI. Si se omite, se usará `https://hoyt-uncautious-jonnie.ngrok-free.dev`.
 4. En FastAPI, agregue el dominio de Vercel a `CORS_ORIGINS`.
 5. Despliegue y pruebe el flujo desde un teléfono y un escritorio.
 

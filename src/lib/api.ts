@@ -9,7 +9,9 @@ import type {
   Referral,
 } from "@/src/types/analysis";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, "") ?? "";
+const DEFAULT_API_URL = "https://hoyt-uncautious-jonnie.ngrok-free.dev";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, "") || DEFAULT_API_URL;
 const HEALTH_TIMEOUT_MS = 10_000;
 const ANALYSIS_TIMEOUT_MS = 120_000;
 const DEFAULT_TIMEOUT_MS = 15_000;
