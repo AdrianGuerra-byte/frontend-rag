@@ -97,6 +97,7 @@ function DifferentialItem({ item }: { item: DifferentialDiagnosis }) {
 
 export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps) {
   const qualityIsAdequate = analysis.imageQuality.status === "adequate";
+  const hasRedFlags = analysis.redFlags.length > 0;
   const referralNeedsAttention = analysis.referral.recommended;
   const referralTitle = referralNeedsAttention
     ? "Valoración especializada recomendada"
@@ -187,18 +188,25 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         </Card>
 
         <div className="grid gap-5 lg:grid-cols-2">
-          <Card className="border-rose-200 bg-rose-50/40">
+          <Card className={hasRedFlags ? "border-rose-200 bg-rose-50/40" : "border-slate-200 bg-white"}>
             <div className="p-5 sm:p-6">
               <div className="flex items-start gap-3">
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-700">
+                <div
+                  className={cn(
+                    "flex size-9 shrink-0 items-center justify-center rounded-lg",
+                    hasRedFlags ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-600",
+                  )}
+                >
                   <TriangleAlert aria-hidden="true" className="size-4" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold tracking-tight text-rose-950">Signos de alarma</h2>
-                  <p className="mt-1 text-sm leading-6 text-rose-900/70">Revise estos puntos durante la valoración clínica.</p>
+                  <h2 className={cn("text-lg font-semibold tracking-tight", hasRedFlags ? "text-rose-950" : "text-slate-950")}>Signos de alarma</h2>
+                  <p className={cn("mt-1 text-sm leading-6", hasRedFlags ? "text-rose-900/70" : "text-slate-500")}>
+                    {hasRedFlags ? "Revise estos puntos durante la valoración clínica." : "No se identificaron alertas adicionales dentro de la información procesada."}
+                  </p>
                 </div>
               </div>
-              {analysis.redFlags.length ? (
+              {hasRedFlags ? (
                 <ul className="mt-5 space-y-3">
                   {analysis.redFlags.map((flag) => (
                     <li className="flex gap-2 text-sm leading-6 text-rose-950" key={flag}>
@@ -207,11 +215,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="mt-5 text-sm leading-6 text-rose-900/70">
-                  No se identificaron alertas adicionales dentro de la información procesada.
-                </p>
-              )}
+              ) : null}
             </div>
           </Card>
 

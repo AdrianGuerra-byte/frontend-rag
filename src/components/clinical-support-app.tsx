@@ -140,15 +140,7 @@ export function ClinicalSupportApp() {
     setErrors((current) => ({ ...current, image: "Adjunte una radiografía para continuar." }));
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const nextErrors = validateForm(values, errors);
-    setErrors(nextErrors);
-
-    if (Object.keys(nextErrors).length) {
-      return;
-    }
-
+  async function submitAnalysis() {
     setErrorMessage(null);
     setViewState("loading");
 
@@ -160,6 +152,18 @@ export function ClinicalSupportApp() {
       setErrorMessage(getApiErrorMessage(error));
       setViewState("error");
     }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const nextErrors = validateForm(values, errors);
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length) {
+      return;
+    }
+
+    await submitAnalysis();
   }
 
   function resetExperience() {
@@ -192,7 +196,7 @@ export function ClinicalSupportApp() {
             <AnalysisResult analysis={analysis} onNewAnalysis={resetExperience} />
           ) : null}
           {viewState === "error" && errorMessage ? (
-            <ErrorState message={errorMessage} onNewAnalysis={resetExperience} onRetry={() => setViewState("form")} />
+            <ErrorState message={errorMessage} onNewAnalysis={resetExperience} onRetry={() => void submitAnalysis()} />
           ) : null}
         </div>
       </main>
