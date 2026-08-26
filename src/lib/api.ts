@@ -156,10 +156,17 @@ function translateKnownMessage(message: string) {
 async function requestJson(path: string, init: RequestInit, timeoutMs: number) {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+  const apiUrl = getApiUrl();
+  const headers = new Headers(init.headers);
+
+  if (apiUrl.includes("ngrok")) {
+    headers.set("ngrok-skip-browser-warning", "true");
+  }
 
   try {
-    const response = await fetch(`${getApiUrl()}${path}`, {
+    const response = await fetch(`${apiUrl}${path}`, {
       ...init,
+      headers,
       cache: "no-store",
       signal: controller.signal,
     });
