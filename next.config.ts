@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // The TypeScript API keeps production builds compatible with the
-  // project's supported TypeScript versions.
+  // The TypeScript API avoids a CLI showConfig issue in the build environment.
   experimental: {
     useTypeScriptCli: false,
   },
