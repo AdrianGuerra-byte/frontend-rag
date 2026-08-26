@@ -58,6 +58,10 @@ export interface ClinicalFormValues {
   image: File | null;
 }
 
+export type ClinicalFormField = keyof ClinicalFormValues;
+
+export type ClinicalFormErrors = Partial<Record<ClinicalFormField, string>>;
+
 export interface HealthResponse {
   status: string;
   ollama: boolean;
