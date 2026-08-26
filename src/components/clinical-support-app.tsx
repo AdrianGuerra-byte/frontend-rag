@@ -6,9 +6,10 @@ import { Activity, ShieldCheck, Stethoscope } from "lucide-react";
 import { AnalysisLoading } from "@/src/components/analysis-loading";
 import { AnalysisResult } from "@/src/components/analysis-result";
 import { ClinicalForm } from "@/src/components/clinical-form";
+import { SystemStatus } from "@/src/components/system-status";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
-import { analyzeMockCase } from "@/src/lib/mock-analysis";
+import { analyzeCase, getApiErrorMessage } from "@/src/lib/api";
 import type {
   ClinicalAnalysis,
   ClinicalFormErrors,
@@ -71,8 +72,7 @@ function AppHeader() {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2 text-xs font-medium text-slate-500">
-          <Activity aria-hidden="true" className="size-3.5 text-teal-700" />
-          Prototipo académico
+          <SystemStatus />
         </div>
       </div>
     </header>
@@ -153,11 +153,11 @@ export function ClinicalSupportApp() {
     setViewState("loading");
 
     try {
-      const result = await analyzeMockCase(values);
+      const result = await analyzeCase(values);
       setAnalysis(result);
       setViewState("result");
-    } catch {
-      setErrorMessage("El servicio no pudo generar un resultado para este caso.");
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error));
       setViewState("error");
     }
   }
