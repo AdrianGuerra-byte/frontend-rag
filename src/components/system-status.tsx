@@ -7,10 +7,14 @@ import { getHealth } from "@/src/lib/api";
 
 type Status = "checking" | "available" | "ai-unavailable" | "offline";
 
-const statusContent: Record<Exclude<Status, "checking">, { label: string; tone: string }> = {
-  available: { label: "Sistema disponible", tone: "text-teal-700" },
-  "ai-unavailable": { label: "Servicio de IA no disponible", tone: "text-amber-700" },
-  offline: { label: "Backend sin conexión", tone: "text-rose-700" },
+const statusContent: Record<Exclude<Status, "checking">, { label: string; mobileLabel: string; tone: string }> = {
+  available: { label: "Sistema disponible", mobileLabel: "Disponible", tone: "text-teal-700" },
+  "ai-unavailable": {
+    label: "Servicio de IA no disponible",
+    mobileLabel: "IA no disponible",
+    tone: "text-amber-700",
+  },
+  offline: { label: "Backend sin conexión", mobileLabel: "Sin conexión", tone: "text-rose-700" },
 };
 
 export function SystemStatus() {
@@ -70,6 +74,7 @@ export function SystemStatus() {
   return (
     <div className={`flex items-center gap-2 text-xs font-medium ${content.tone}`}>
       <Icon aria-hidden="true" className="size-3.5" />
+      <span className="sm:hidden">{content.mobileLabel}</span>
       <span className="hidden sm:inline">{content.label}</span>
       <button
         aria-label="Verificar conexión nuevamente"

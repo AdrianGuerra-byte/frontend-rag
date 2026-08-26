@@ -174,6 +174,9 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
               <SectionHeading icon={FileText} id="differentials-title">
                 Diagnósticos diferenciales
               </SectionHeading>
+              <p className="mt-3 text-sm leading-6 text-slate-500">
+                Son posibilidades para correlacionar con la valoración clínica; no son diagnósticos confirmados.
+              </p>
               {analysis.differentialDiagnoses.length ? (
                 <ul className="mt-5">
                   {analysis.differentialDiagnoses.map((item) => (
