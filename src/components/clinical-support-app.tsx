@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Activity } from "lucide-react";
 
 import { AnalysisLoading } from "@/src/components/analysis-loading";
@@ -117,6 +117,7 @@ export function ClinicalSupportApp() {
   const [errors, setErrors] = useState<ClinicalFormErrors>({});
   const [analysis, setAnalysis] = useState<ClinicalAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const isSubmittingRef = useRef(false);
 
   const isFormIncomplete =
     !values.age.trim() ||
@@ -141,6 +142,11 @@ export function ClinicalSupportApp() {
   }
 
   async function submitAnalysis() {
+    if (isSubmittingRef.current) {
+      return;
+    }
+
+    isSubmittingRef.current = true;
     setErrorMessage(null);
     setViewState("loading");
 
@@ -151,6 +157,8 @@ export function ClinicalSupportApp() {
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error));
       setViewState("error");
+    } finally {
+      isSubmittingRef.current = false;
     }
   }
 
@@ -167,6 +175,7 @@ export function ClinicalSupportApp() {
   }
 
   function resetExperience() {
+    isSubmittingRef.current = false;
     setValues(initialValues);
     setErrors({});
     setAnalysis(null);
