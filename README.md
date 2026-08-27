@@ -19,10 +19,10 @@ pnpm dev
 Abra [http://localhost:3000](http://localhost:3000). El archivo `.env.local` debe apuntar al backend:
 
 ```env
-NEXT_PUBLIC_API_URL=https://hoyt-uncautious-jonnie.ngrok-free.dev
+NEXT_PUBLIC_API_URL=https://su-tunel-https-del-backend.example
 ```
 
-El frontend no incluye un proxy ni una ruta API propia. La URL pública anterior también queda como respaldo en `src/lib/api.ts`; `NEXT_PUBLIC_API_URL` puede sobrescribirla. El backend debe permitir el origen del frontend mediante CORS.
+El frontend no incluye un proxy ni una ruta API propia. `NEXT_PUBLIC_API_URL` es la única configuración del servicio y debe definirse antes de compilar para Vercel. El backend debe permitir el origen del frontend mediante CORS.
 
 ## API utilizada
 
@@ -35,7 +35,7 @@ El módulo `src/lib/api.ts` centraliza las llamadas a:
 
 El resultado se valida contra el contrato real del backend: `analysisId`, `imageQuality`, `possibleFindings`, `differentialDiagnoses`, `redFlags`, `missingInformation`, `referral`, `sources` y `limitations`.
 
-El análisis tarda hasta 120 segundos antes de mostrar un error de timeout. La ausencia de Ollama no bloquea el formulario: el indicador informa el estado y deja que FastAPI aplique su modo de respaldo.
+El análisis tarda hasta 120 segundos antes de mostrar un error de timeout. La pantalla de procesamiento permanece estable durante toda la solicitud.
 
 ## Verificación
 
@@ -51,7 +51,7 @@ pnpm build
 
 1. Importe este proyecto en Vercel.
 2. Mantenga el framework como Next.js y el comando de build estándar (`pnpm build`).
-3. Configure `NEXT_PUBLIC_API_URL` con la URL HTTPS pública de FastAPI. Si se omite, se usará `https://hoyt-uncautious-jonnie.ngrok-free.dev`.
+3. Configure `NEXT_PUBLIC_API_URL` con la URL HTTPS pública vigente de FastAPI antes del build.
 4. En FastAPI, agregue el dominio de Vercel a `CORS_ORIGINS`.
 5. Despliegue y pruebe el flujo desde un teléfono y un escritorio.
 

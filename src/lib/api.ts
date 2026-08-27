@@ -9,9 +9,8 @@ import type {
   Referral,
 } from "@/src/types/analysis";
 
-const DEFAULT_API_URL = "https://hoyt-uncautious-jonnie.ngrok-free.dev";
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, "") || DEFAULT_API_URL;
+  process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, "") || "";
 const HEALTH_TIMEOUT_MS = 10_000;
 const ANALYSIS_TIMEOUT_MS = 120_000;
 const DEFAULT_TIMEOUT_MS = 15_000;
@@ -142,21 +141,54 @@ function extractDetail(payload: unknown) {
 const knownErrorTranslations: Record<string, string> = {
   "Unsupported image format. Use JPEG, JPG, PNG, or WEBP.":
     "Formato de imagen no compatible. Use JPEG, JPG, PNG o WEBP.",
+  "Image file does not exist.": "La imagen seleccionada no existe.",
+  "Image file cannot be read.": "No fue posible leer la imagen seleccionada.",
   "Image exceeds the 10 MB upload limit.": "La imagen supera el límite de carga de 10 MB.",
   "Uploaded image is empty.": "La imagen enviada está vacía.",
   "Unable to generate clinical-support analysis.":
     "El servicio no pudo generar el análisis de apoyo clínico.",
   "Analysis not found.": "No se encontró el análisis solicitado.",
+  VISION_ERROR: "No fue posible analizar la imagen en este momento.",
+  VISION_MODEL_NOT_CONFIGURED: "El análisis de la imagen no está disponible.",
+  VISION_UNAVAILABLE: "No fue posible analizar la imagen en este momento.",
+  VISION_MODEL_UNAVAILABLE: "El análisis de la imagen no está disponible en este momento.",
+  VISION_INVALID_RESPONSE: "El análisis de la imagen devolvió una respuesta no válida.",
+  VISION_INVALID_IMAGE: "La imagen seleccionada no es válida.",
+  SYNTHESIS_ERROR: "No fue posible preparar el resultado clínico.",
+  SYNTHESIS_MODEL_NOT_CONFIGURED: "No fue posible preparar el resultado clínico.",
+  SYNTHESIS_UNAVAILABLE: "No fue posible preparar el resultado clínico en este momento.",
+  SYNTHESIS_MODEL_UNAVAILABLE: "No fue posible preparar el resultado clínico en este momento.",
+  SYNTHESIS_INVALID_RESPONSE: "El resultado clínico no pudo validarse.",
 };
 
-function translateKnownMessage(message: string) {
-  return knownErrorTranslations[message] ?? message;
+function getHttpErrorMessage(status: number, detail: string | null) {
+  if (detail) {
+    const translatedDetail = knownErrorTranslations[detail] ??
+      (Object.values(knownErrorTranslations).includes(detail) ? detail : null);
+    if (translatedDetail) {
+      return translatedDetail;
+    }
+  }
+
+  if (status === 422) {
+    return "La información del caso no es válida. Revise los campos e intente nuevamente.";
+  }
+
+  if (status === 503) {
+    return "El servicio de análisis no está disponible en este momento. Intente nuevamente.";
+  }
+
+  if (status >= 500) {
+    return "No fue posible completar el análisis en este momento. Intente nuevamente.";
+  }
+
+  return "El servicio no pudo completar la solicitud. Intente nuevamente.";
 }
 
 async function requestJson(path: string, init: RequestInit, timeoutMs: number) {
+  const apiUrl = getApiUrl();
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
-  const apiUrl = getApiUrl();
   const headers = new Headers(init.headers);
 
   if (apiUrl.includes("ngrok")) {
@@ -181,13 +213,10 @@ async function requestJson(path: string, init: RequestInit, timeoutMs: number) {
 
       const detail = extractDetail(payload);
       const safeDetail = detail && !/traceback|stack trace|exception|file "/i.test(detail)
-        ? translateKnownMessage(detail.slice(0, 240))
+        ? detail.slice(0, 240)
         : null;
 
-      throw new ApiError(
-        safeDetail ?? `El servicio no pudo completar la solicitud (${response.status}).`,
-        response.status,
-      );
+      throw new ApiError(getHttpErrorMessage(response.status, safeDetail), response.status);
     }
 
     try {

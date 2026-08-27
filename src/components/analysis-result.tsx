@@ -43,6 +43,28 @@ const knownImageMessages: Record<string, string> = {
     "No se proporcionó una imagen; se está utilizando un análisis basado solo en texto.",
 };
 
+function getImageQualityLabel(analysis: ClinicalAnalysis["imageQuality"]) {
+  if (analysis.message.startsWith("Image quality is limited:")) {
+    return "Limitada";
+  }
+
+  return imageQualityLabels[analysis.status];
+}
+
+function getImageQualityMessage(analysis: ClinicalAnalysis["imageQuality"]) {
+  const knownMessage = knownImageMessages[analysis.message];
+  if (knownMessage) {
+    return knownMessage;
+  }
+
+  const limitedPrefix = "Image quality is limited:";
+  if (analysis.message.startsWith(limitedPrefix)) {
+    return `La calidad de la imagen es limitada: ${analysis.message.slice(limitedPrefix.length).trim()}`;
+  }
+
+  return analysis.message;
+}
+
 function SectionHeading({
   children,
   id,
@@ -104,6 +126,8 @@ function DifferentialItem({
 
 export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps) {
   const qualityIsAdequate = analysis.imageQuality.status === "adequate";
+  const imageQualityLabel = getImageQualityLabel(analysis.imageQuality);
+  const imageQualityMessage = getImageQualityMessage(analysis.imageQuality);
   const hasRedFlags = analysis.redFlags.length > 0;
   const referralNeedsAttention = analysis.referral.recommended;
   const referralTitle = referralNeedsAttention
@@ -147,7 +171,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Evaluación inicial</p>
             <h2 className="mt-2 text-base font-semibold tracking-tight text-ink">Calidad de la imagen</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-              {knownImageMessages[analysis.imageQuality.message] ?? analysis.imageQuality.message}
+              {imageQualityMessage}
             </p>
           </div>
           <span
@@ -163,7 +187,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
             ) : (
               <AlertCircle aria-hidden="true" className="size-4" />
             )}
-            {imageQualityLabels[analysis.imageQuality.status]}
+            {imageQualityLabel}
           </span>
         </div>
       </div>
@@ -308,15 +332,17 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
                 <div>
                   <p className="text-sm font-semibold leading-6 text-ink">{source.title}</p>
                   <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm leading-5 text-muted sm:grid-cols-3">
-                    <div>
-                      <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Institución</dt>
-                      <dd className="mt-1">{source.source}</dd>
-                    </div>
+                    {source.source.trim() ? (
+                      <div>
+                        <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Institución</dt>
+                        <dd className="mt-1">{source.source}</dd>
+                      </div>
+                    ) : null}
                     <div>
                       <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Documento</dt>
                       <dd className="mt-1 break-words">{source.document}</dd>
                     </div>
-                    {source.page ? (
+                    {source.page != null ? (
                       <div>
                         <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Página</dt>
                         <dd className="mt-1">{source.page}</dd>
