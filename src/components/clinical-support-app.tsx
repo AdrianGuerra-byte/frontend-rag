@@ -6,6 +6,7 @@ import { Activity } from "lucide-react";
 import { AnalysisLoading } from "@/src/components/analysis-loading";
 import { AnalysisResult } from "@/src/components/analysis-result";
 import { ClinicalForm } from "@/src/components/clinical-form";
+import { ProductMark } from "@/src/components/product-mark";
 import { SystemStatus } from "@/src/components/system-status";
 import { Button } from "@/src/components/ui/button";
 import { analyzeCase, getApiErrorMessage } from "@/src/lib/api";
@@ -27,13 +28,6 @@ const initialValues: ClinicalFormValues = {
   signs: "",
   medicalHistory: "",
   image: null,
-};
-
-const screenContent: Record<ViewState, { eyebrow: string; title: string }> = {
-  form: { eyebrow: "CLINICAL SUPPORT / 01", title: "Nuevo análisis" },
-  loading: { eyebrow: "CLINICAL SUPPORT / ANÁLISIS", title: "Procesando caso" },
-  result: { eyebrow: "CLINICAL SUPPORT / RESULTADO", title: "Resultado del análisis" },
-  error: { eyebrow: "CLINICAL SUPPORT / ESTADO", title: "No se pudo completar" },
 };
 
 function validateForm(values: ClinicalFormValues, currentErrors: ClinicalFormErrors) {
@@ -65,58 +59,52 @@ function validateForm(values: ClinicalFormValues, currentErrors: ClinicalFormErr
   return errors;
 }
 
-function ProductMark() {
+function ErrorState({
+  message,
+  onRetry,
+  onNewAnalysis,
+}: {
+  message: string;
+  onRetry: () => void;
+  onNewAnalysis: () => void;
+}) {
   return (
-    <span aria-hidden="true" className="relative size-8 shrink-0 text-primary">
-      <span className="absolute left-0 top-0 size-2.5 border-l border-t border-current" />
-      <span className="absolute right-0 top-0 size-2.5 border-r border-t border-current" />
-      <span className="absolute bottom-0 left-0 size-2.5 border-b border-l border-current" />
-      <span className="absolute bottom-0 right-0 size-2.5 border-b border-r border-current" />
-      <span className="absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current" />
-    </span>
-  );
-}
-
-function AppHeader({ viewState }: { viewState: ViewState }) {
-  const content = screenContent[viewState];
-
-  return (
-    <header className="sticky top-0 z-20 border-b border-line bg-surface/95 pt-[env(safe-area-inset-top)] backdrop-blur-sm">
-      <div className="mx-auto flex min-h-16 w-full max-w-[760px] items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <div className="flex min-w-0 items-center gap-3">
-          <ProductMark />
-          <div className="min-w-0">
-            <p className="truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-              {content.eyebrow}
-            </p>
-            <p className="mt-0.5 truncate text-sm font-semibold tracking-tight text-ink">
-              {content.title}
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 text-xs font-medium text-muted">
-          <SystemStatus />
+    <section
+      aria-labelledby="analysis-error-title"
+      className="mx-auto flex w-full max-w-xl flex-col items-center py-8 text-center sm:py-14"
+    >
+      <div className="mb-8 flex w-full items-center gap-3 text-left">
+        <ProductMark />
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+            Apoyo clínico / estado
+          </p>
+          <p className="mt-0.5 text-sm font-semibold tracking-tight text-ink">
+            Análisis no completado
+          </p>
         </div>
       </div>
-    </header>
-  );
-}
-
-function ErrorState({ message, onRetry, onNewAnalysis }: { message: string; onRetry: () => void; onNewAnalysis: () => void }) {
-  return (
-    <section aria-labelledby="analysis-error-title" className="mx-auto flex w-full max-w-xl flex-col items-center py-8 text-center sm:py-14">
       <div className="flex size-14 items-center justify-center rounded-[var(--radius-panel)] border border-danger/20 bg-danger-soft text-danger">
         <Activity aria-hidden="true" className="size-8" />
       </div>
-      <h1 className="mt-6 text-2xl font-semibold tracking-tight text-ink sm:text-3xl" id="analysis-error-title">
+      <h1
+        className="mt-6 text-2xl font-semibold tracking-tight text-ink sm:text-3xl"
+        id="analysis-error-title"
+      >
         No fue posible completar el análisis.
       </h1>
       <p className="mt-3 text-base leading-7 text-muted">{message}</p>
-      <p className="mt-2 text-sm leading-6 text-muted">Verifique la conexión con el servicio e intente nuevamente.</p>
+      <p className="mt-2 text-sm leading-6 text-muted">
+        Verifique la conexión con el servicio e intente nuevamente.
+      </p>
       <div className="mt-8 w-full border-y border-line bg-surface px-5 py-5 text-left sm:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button className="w-full sm:w-auto" onClick={onRetry}>Reintentar</Button>
-          <Button className="w-full sm:w-auto" variant="secondary" onClick={onNewAnalysis}>Nuevo análisis</Button>
+          <Button className="w-full sm:w-auto" onClick={onRetry}>
+            Reintentar
+          </Button>
+          <Button className="w-full sm:w-auto" variant="secondary" onClick={onNewAnalysis}>
+            Nuevo análisis
+          </Button>
         </div>
       </div>
     </section>
@@ -189,33 +177,47 @@ export function ClinicalSupportApp() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen w-full max-w-[820px] flex-col bg-surface md:border-x md:border-line">
-        <AppHeader viewState={viewState} />
-        <main className="flex-1">
+        <main className="flex-1 pt-[env(safe-area-inset-top)]">
           <div
             className={cn(
               "mx-auto w-full px-4 py-6 pb-8 sm:px-6 sm:py-8 sm:pb-10",
               viewState === "result" ? "max-w-[780px]" : "max-w-[680px]",
             )}
           >
-            {viewState === "form" ? (
-              <ClinicalForm
-                errors={errors}
-                formMessage={errorMessage}
-                isSubmitDisabled={isFormIncomplete}
-                values={values}
-                onImageRemove={handleImageRemove}
-                onImageSelect={handleImageSelect}
-                onSubmit={handleSubmit}
-                onValueChange={handleValueChange}
-              />
-            ) : null}
-            {viewState === "loading" ? <AnalysisLoading /> : null}
-            {viewState === "result" && analysis ? (
-              <AnalysisResult analysis={analysis} onNewAnalysis={resetExperience} />
-            ) : null}
-            {viewState === "error" && errorMessage ? (
-              <ErrorState message={errorMessage} onNewAnalysis={resetExperience} onRetry={() => void submitAnalysis()} />
-            ) : null}
+            <div aria-hidden="true" className="hidden">
+              <SystemStatus />
+            </div>
+            <div
+              className={cn(
+                "screen-transition",
+                viewState === "form" && "screen-transition-back",
+              )}
+              key={viewState}
+            >
+              {viewState === "form" ? (
+                <ClinicalForm
+                  errors={errors}
+                  formMessage={errorMessage}
+                  isSubmitDisabled={isFormIncomplete}
+                  values={values}
+                  onImageRemove={handleImageRemove}
+                  onImageSelect={handleImageSelect}
+                  onSubmit={handleSubmit}
+                  onValueChange={handleValueChange}
+                />
+              ) : null}
+              {viewState === "loading" ? <AnalysisLoading /> : null}
+              {viewState === "result" && analysis ? (
+                <AnalysisResult analysis={analysis} onNewAnalysis={resetExperience} />
+              ) : null}
+              {viewState === "error" && errorMessage ? (
+                <ErrorState
+                  message={errorMessage}
+                  onNewAnalysis={resetExperience}
+                  onRetry={() => void submitAnalysis()}
+                />
+              ) : null}
+            </div>
           </div>
         </main>
       </div>

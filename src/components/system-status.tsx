@@ -15,7 +15,7 @@ const statusContent: Record<Exclude<Status, "checking">, { label: string; mobile
     tone: "text-warning",
     dot: "bg-warning",
   },
-  offline: { label: "Backend sin conexión", mobileLabel: "Sin conexión", tone: "text-danger", dot: "bg-danger" },
+  offline: { label: "Servicio no disponible", mobileLabel: "No disponible", tone: "text-danger", dot: "bg-danger" },
 };
 
 export function SystemStatus() {

@@ -1,10 +1,12 @@
 import { CircleDashed, FileText, ImageIcon, Search } from "lucide-react";
 
+import { ProductMark } from "@/src/components/product-mark";
+
 const stages = [
-  { icon: FileText, label: "Información clínica recibida" },
-  { icon: ImageIcon, label: "Analizando imagen" },
-  { icon: Search, label: "Consultando evidencia médica" },
-  { icon: CircleDashed, label: "Preparando resultado" },
+  { icon: FileText, label: "Información clínica" },
+  { icon: ImageIcon, label: "Imagen radiográfica" },
+  { icon: Search, label: "Evidencia documental" },
+  { icon: CircleDashed, label: "Preparación del resultado" },
 ];
 
 function ScanMotif() {
@@ -28,7 +30,16 @@ export function AnalysisLoading() {
       className="mx-auto flex w-full max-w-[640px] flex-col items-center py-8 text-center sm:py-12"
       role="status"
     >
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">Análisis / Procesamiento</p>
+      <div className="mb-8 flex w-full items-center gap-3 text-left">
+        <ProductMark className="size-10" />
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+            Apoyo clínico
+          </p>
+          <p className="mt-1 text-xs font-medium text-muted">Análisis en curso</p>
+        </div>
+      </div>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">Proceso clínico</p>
       <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ink sm:text-3xl" id="analysis-loading-title">
         Analizando caso
       </h1>

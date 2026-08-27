@@ -1,6 +1,7 @@
-import { AlertCircle, CheckCircle2, Info, Plus, TriangleAlert } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Info, Plus, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/src/components/ui/button";
+import { ProductMark } from "@/src/components/product-mark";
 import { cn } from "@/src/lib/utils";
 import type {
   ClinicalAnalysis,
@@ -24,7 +25,7 @@ const confidenceLabels: Record<FindingConfidence, string> = {
 const priorityLabels: Record<ReferralPriority, string> = {
   urgent: "Urgente",
   soon: "Prioritaria",
-  routine: "Programable",
+  routine: "Ordinaria",
   not_assessed: "No valorada",
 };
 
@@ -113,20 +114,29 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
 
   return (
     <section aria-labelledby="analysis-result-title" className="mx-auto w-full max-w-[760px]">
-      <header className="mb-7 flex flex-col gap-5 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="mb-3 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
-            Caso / {analysis.analysisId.slice(0, 8)}
-          </p>
-          <h1 className="text-[clamp(1.8rem,4vw,2.3rem)] font-semibold tracking-[-0.03em] text-ink" id="analysis-result-title">
-            Resultado del análisis
-          </h1>
-          <p className="mt-2 text-sm text-muted">
-            Apoyo a la decisión clínica · Resultado no diagnóstico
-          </p>
+      <header className="mb-7 border-b border-line pb-6">
+        <div className="flex items-start gap-3">
+          <ProductMark className="size-10" />
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+              Apoyo clínico / resultado
+            </p>
+            <p className="mt-1 font-mono text-xs font-medium text-muted">
+              Caso / {analysis.analysisId.slice(0, 8)}
+            </p>
+          </div>
         </div>
-        <Button className="w-full sm:w-auto" variant="secondary" onClick={onNewAnalysis}>
+        <h1
+          className="mt-7 text-[clamp(1.8rem,4vw,2.3rem)] font-semibold tracking-[-0.03em] text-ink"
+          id="analysis-result-title"
+        >
+          Resultado del análisis
+        </h1>
+        <p className="mt-2 text-sm text-muted">
+          Apoyo a la decisión clínica · resultado no diagnóstico
+        </p>
+        <Button className="mt-5 w-full sm:w-auto" variant="secondary" onClick={onNewAnalysis}>
+          <ArrowLeft aria-hidden="true" className="size-4" />
           Nuevo análisis
         </Button>
       </header>
@@ -176,10 +186,10 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
               <p className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
                 <span>03</span>
                 <span aria-hidden="true">/</span>
-                <span>Prioridad clínica</span>
+                <span>Alertas clínicas</span>
               </p>
               <h2 className={cn("mt-1 text-base font-semibold tracking-tight", hasRedFlags ? "text-danger" : "text-ink")} id="red-flags-title">
-                Signos de alarma
+                Alertas clínicas
               </h2>
               <p className={cn("mt-2 text-sm leading-6", hasRedFlags ? "text-danger/85" : "text-muted")}>
                 {hasRedFlags

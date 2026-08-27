@@ -1,9 +1,10 @@
 "use client";
 
 import type { FormEvent, ReactNode } from "react";
-import { AlertCircle, ArrowRight, ClipboardList } from "lucide-react";
+import { AlertCircle, ArrowRight } from "lucide-react";
 
 import { ImageUpload } from "@/src/components/image-upload";
+import { ProductMark } from "@/src/components/product-mark";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
@@ -60,7 +61,9 @@ function FormSectionHeading({
     <div className="mb-5 flex items-start gap-3">
       <div className="flex shrink-0 items-center gap-1 pt-0.5 font-mono text-[11px] font-medium tracking-[0.12em] text-primary">
         {index}
-        <span aria-hidden="true" className="text-muted/60">/</span>
+        <span aria-hidden="true" className="text-muted/60">
+          /
+        </span>
       </div>
       <div>
         <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink">{title}</h2>
@@ -82,12 +85,20 @@ export function ClinicalForm({
 }: ClinicalFormProps) {
   return (
     <section aria-labelledby="new-analysis-title" className="mx-auto w-full max-w-[640px]">
-      <div className="mb-7 max-w-xl">
-        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-          <ClipboardList aria-hidden="true" className="size-3.5" />
-          Caso sin guardar
+      <div className="mb-8 max-w-xl">
+        <div className="flex items-center gap-3">
+          <ProductMark className="size-10" />
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+              Apoyo clínico
+            </p>
+            <p className="mt-1 text-xs font-medium text-muted">Captura clínica · caso sin guardar</p>
+          </div>
         </div>
-        <h1 className="text-[clamp(1.8rem,4vw,2.25rem)] font-semibold tracking-[-0.03em] text-ink" id="new-analysis-title">
+        <h1
+          className="mt-7 text-[clamp(1.8rem,4vw,2.25rem)] font-semibold tracking-[-0.03em] text-ink"
+          id="new-analysis-title"
+        >
           Nuevo análisis clínico
         </h1>
         <p className="mt-3 text-[15px] leading-6 text-muted">
@@ -107,161 +118,170 @@ export function ClinicalForm({
       ) : null}
 
       <form className="relative" noValidate onSubmit={onSubmit}>
-          <div className="border-t border-line py-6 sm:py-7">
-            <FormSectionHeading
-              description="Complete los campos requeridos para contextualizar la imagen."
-              index="01"
-              title="Datos del paciente"
-            />
+        <div className="border-t border-line py-6 sm:py-7">
+          <FormSectionHeading
+            description="Complete los campos requeridos para contextualizar la imagen."
+            index="01"
+            title="Paciente"
+          />
 
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                  <Label htmlFor="age">
-                    Edad<RequiredMark />
-                  </Label>
-                  <Input
-                    aria-describedby={errors.age ? "age-error" : undefined}
-                    aria-invalid={Boolean(errors.age)}
-                    className="mt-2"
-                    id="age"
-                    inputMode="numeric"
-                    max={120}
-                    min={1}
-                    placeholder="Ej. 32"
-                    required
-                    type="number"
-                    value={values.age}
-                    onChange={(event) => onValueChange("age", event.target.value)}
-                  />
-                  <FieldError id="age-error" message={errors.age} />
-              </div>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="age">
+                Edad<RequiredMark />
+              </Label>
+              <Input
+                aria-describedby={errors.age ? "age-error" : undefined}
+                aria-invalid={Boolean(errors.age)}
+                className="mt-2"
+                id="age"
+                inputMode="numeric"
+                max={120}
+                min={1}
+                placeholder="Ej. 32"
+                required
+                type="number"
+                value={values.age}
+                onChange={(event) => onValueChange("age", event.target.value)}
+              />
+              <FieldError id="age-error" message={errors.age} />
+            </div>
 
-              <div>
-                  <Label htmlFor="sex">
-                    Sexo<RequiredMark />
-                  </Label>
-                  <Select
-                    aria-describedby={errors.sex ? "sex-error" : undefined}
-                    aria-invalid={Boolean(errors.sex)}
-                    className="mt-2"
-                    id="sex"
-                    required
-                    value={values.sex}
-                    onChange={(event) => onValueChange("sex", event.target.value)}
-                  >
-                    <option disabled value="">
-                      Seleccione una opción
-                    </option>
-                    <option value="male">Masculino</option>
-                    <option value="female">Femenino</option>
-                    <option value="other">Otro / No especificado</option>
-                  </Select>
-                  <FieldError id="sex-error" message={errors.sex} />
-              </div>
+            <div>
+              <Label htmlFor="sex">
+                Sexo<RequiredMark />
+              </Label>
+              <Select
+                aria-describedby={errors.sex ? "sex-error" : undefined}
+                aria-invalid={Boolean(errors.sex)}
+                className="mt-2"
+                id="sex"
+                required
+                value={values.sex}
+                onChange={(event) => onValueChange("sex", event.target.value)}
+              >
+                <option disabled value="">
+                  Seleccione una opción
+                </option>
+                <option value="male">Masculino</option>
+                <option value="female">Femenino</option>
+                <option value="other">Otro / No especificado</option>
+              </Select>
+              <FieldError id="sex-error" message={errors.sex} />
             </div>
           </div>
+        </div>
 
-          <div className="grid gap-5 border-t border-line py-6 sm:py-7">
-            <FormSectionHeading
-              description="Registre los datos disponibles de la valoración actual."
-              index="02"
-              title="Información clínica"
+        <div className="border-t border-line py-6 sm:py-7">
+          <FormSectionHeading
+            description="Describa el motivo principal de la valoración."
+            index="02"
+            title="Motivo de consulta"
+          />
+
+          <div>
+            <Label htmlFor="chiefComplaint">
+              Motivo de consulta<RequiredMark />
+            </Label>
+            <Textarea
+              aria-describedby={errors.chiefComplaint ? "chiefComplaint-error" : undefined}
+              aria-invalid={Boolean(errors.chiefComplaint)}
+              className="mt-2 min-h-24"
+              id="chiefComplaint"
+              maxLength={500}
+              placeholder="Dolor intenso en muñeca posterior a una caída."
+              required
+              value={values.chiefComplaint}
+              onChange={(event) => onValueChange("chiefComplaint", event.target.value)}
             />
-            <div className="grid gap-5">
-              <div>
-                <Label htmlFor="chiefComplaint">
-                  Motivo de consulta<RequiredMark />
-                </Label>
-                <Textarea
-                  aria-describedby={errors.chiefComplaint ? "chiefComplaint-error" : undefined}
-                  aria-invalid={Boolean(errors.chiefComplaint)}
-                  className="mt-2 min-h-24"
-                  id="chiefComplaint"
-                  maxLength={500}
-                  placeholder="Dolor intenso en muñeca posterior a una caída."
-                  required
-                  value={values.chiefComplaint}
-                  onChange={(event) => onValueChange("chiefComplaint", event.target.value)}
-                />
-                <FieldError id="chiefComplaint-error" message={errors.chiefComplaint} />
-              </div>
+            <FieldError id="chiefComplaint-error" message={errors.chiefComplaint} />
+          </div>
+        </div>
 
-              <div>
-                <Label htmlFor="symptoms">
-                  Síntomas<RequiredMark />
-                </Label>
-                <Textarea
-                  aria-describedby={errors.symptoms ? "symptoms-error" : undefined}
-                  aria-invalid={Boolean(errors.symptoms)}
-                  className="mt-2 min-h-28"
-                  id="symptoms"
-                  maxLength={4000}
-                  placeholder="Dolor, inflamación y limitación del movimiento."
-                  required
-                  value={values.symptoms}
-                  onChange={(event) => onValueChange("symptoms", event.target.value)}
-                />
-                <FieldError id="symptoms-error" message={errors.symptoms} />
-              </div>
+        <div className="grid gap-5 border-t border-line py-6 sm:py-7">
+          <FormSectionHeading
+            description="Registre los datos disponibles de la valoración actual."
+            index="03"
+            title="Información clínica"
+          />
 
-              <div>
-                <Label htmlFor="signs">Signos clínicos</Label>
-                <Textarea
-                  aria-describedby={errors.signs ? "signs-error" : undefined}
-                  aria-invalid={Boolean(errors.signs)}
-                  className="mt-2 min-h-24"
-                  id="signs"
-                  maxLength={4000}
-                  placeholder="Sensibilidad localizada, edema visible..."
-                  value={values.signs}
-                  onChange={(event) => onValueChange("signs", event.target.value)}
-                />
-                <FieldError id="signs-error" message={errors.signs} />
-              </div>
+          <div className="grid gap-5">
+            <div>
+              <Label htmlFor="symptoms">
+                Síntomas<RequiredMark />
+              </Label>
+              <Textarea
+                aria-describedby={errors.symptoms ? "symptoms-error" : undefined}
+                aria-invalid={Boolean(errors.symptoms)}
+                className="mt-2 min-h-28"
+                id="symptoms"
+                maxLength={4000}
+                placeholder="Dolor, inflamación y limitación del movimiento."
+                required
+                value={values.symptoms}
+                onChange={(event) => onValueChange("symptoms", event.target.value)}
+              />
+              <FieldError id="symptoms-error" message={errors.symptoms} />
+            </div>
 
-              <div>
-                <Label htmlFor="medicalHistory">Antecedentes relevantes</Label>
-                <Textarea
-                  aria-describedby={errors.medicalHistory ? "medicalHistory-error" : undefined}
-                  aria-invalid={Boolean(errors.medicalHistory)}
-                  className="mt-2 min-h-24"
-                  id="medicalHistory"
-                  maxLength={4000}
-                  placeholder="Antecedentes, medicamentos, lesiones previas u otra información relevante."
-                  value={values.medicalHistory}
-                  onChange={(event) => onValueChange("medicalHistory", event.target.value)}
-                />
-                <FieldError id="medicalHistory-error" message={errors.medicalHistory} />
-              </div>
+            <div>
+              <Label htmlFor="signs">Signos clínicos</Label>
+              <Textarea
+                aria-describedby={errors.signs ? "signs-error" : undefined}
+                aria-invalid={Boolean(errors.signs)}
+                className="mt-2 min-h-24"
+                id="signs"
+                maxLength={4000}
+                placeholder="Sensibilidad localizada, edema visible..."
+                value={values.signs}
+                onChange={(event) => onValueChange("signs", event.target.value)}
+              />
+              <FieldError id="signs-error" message={errors.signs} />
+            </div>
+
+            <div>
+              <Label htmlFor="medicalHistory">Antecedentes relevantes</Label>
+              <Textarea
+                aria-describedby={errors.medicalHistory ? "medicalHistory-error" : undefined}
+                aria-invalid={Boolean(errors.medicalHistory)}
+                className="mt-2 min-h-24"
+                id="medicalHistory"
+                maxLength={4000}
+                placeholder="Antecedentes, medicamentos, lesiones previas u otra información relevante."
+                value={values.medicalHistory}
+                onChange={(event) => onValueChange("medicalHistory", event.target.value)}
+              />
+              <FieldError id="medicalHistory-error" message={errors.medicalHistory} />
             </div>
           </div>
+        </div>
 
-          <div className="border-t border-line py-6 sm:py-7">
-            <FormSectionHeading
-              description="Suba una imagen existente o tome una fotografía desde el dispositivo."
-              index="03"
-              title={<>Estudio radiográfico<RequiredMark /></>}
-            />
-            <ImageUpload
-              error={errors.image}
-              file={values.image}
-              onFileSelect={onImageSelect}
-              onRemove={onImageRemove}
-            />
-            {!errors.image ? (
-              <p className="mt-2 text-xs text-muted">Campo requerido para este flujo radiográfico.</p>
-            ) : null}
-          </div>
+        <div className="border-t border-line py-6 sm:py-7">
+          <FormSectionHeading
+            description="Suba una imagen existente o tome una fotografía desde el dispositivo."
+            index="04"
+            title={<>Estudio radiográfico<RequiredMark /></>}
+          />
+          <ImageUpload
+            error={errors.image}
+            file={values.image}
+            onFileSelect={onImageSelect}
+            onRemove={onImageRemove}
+          />
+          {!errors.image ? (
+            <p className="mt-2 text-xs text-muted">Campo requerido para este flujo radiográfico.</p>
+          ) : null}
+        </div>
 
-          <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t border-line bg-surface/95 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-sm sm:static sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-5 sm:backdrop-blur-none">
-            <p className="text-xs leading-5 text-muted sm:order-first">
-              <RequiredMark /> Campos requeridos
-            </p>
-            <Button className="w-full sm:order-last sm:w-auto sm:min-w-48" disabled={isSubmitDisabled} type="submit">
-              Analizar caso
-              <ArrowRight aria-hidden="true" className="size-4" />
-            </Button>
-          </div>
+        <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t border-line bg-surface/95 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-sm sm:static sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-5 sm:backdrop-blur-none">
+          <p className="text-xs leading-5 text-muted sm:order-first">
+            <RequiredMark /> Campos requeridos
+          </p>
+          <Button className="w-full sm:order-last sm:w-auto sm:min-w-48" disabled={isSubmitDisabled} type="submit">
+            Analizar caso
+            <ArrowRight aria-hidden="true" className="size-4" />
+          </Button>
+        </div>
       </form>
     </section>
   );
