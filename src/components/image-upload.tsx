@@ -108,7 +108,7 @@ export function ImageUpload({
     >
       <input
         ref={fileInputRef}
-        accept="image/jpeg,image/png,image/webp"
+        accept=".jpeg,.jpg,.png,.webp,image/jpeg,image/jpg,image/png,image/webp"
         aria-label="Seleccionar archivo de radiografía"
         className="sr-only"
         type="file"
@@ -116,7 +116,7 @@ export function ImageUpload({
       />
       <input
         ref={cameraInputRef}
-        accept="image/jpeg,image/png,image/webp"
+        accept=".jpeg,.jpg,.png,.webp,image/jpeg,image/jpg,image/png,image/webp"
         aria-label="Tomar una fotografía de la radiografía"
         capture="environment"
         className="sr-only"
@@ -182,7 +182,7 @@ export function ImageUpload({
           </div>
           <p className="relative mt-4 text-sm font-semibold text-ink">Adjuntar radiografía</p>
           <p className="relative mt-1 text-sm leading-5 text-muted">
-            JPG, PNG o WEBP · máximo 10 MB
+            JPEG, JPG, PNG o WEBP · máximo 10 MB
           </p>
           <p className="relative mt-1 text-xs text-muted">
             También puede tomar una fotografía desde este dispositivo.

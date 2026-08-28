@@ -52,8 +52,8 @@ function validateForm(values: ClinicalFormValues, currentErrors: ClinicalFormErr
     errors.symptoms = "Describa los síntomas disponibles.";
   }
 
-  if (!values.image) {
-    errors.image = currentErrors.image ?? "Adjunte una radiografía para continuar.";
+  if (currentErrors.image) {
+    errors.image = currentErrors.image;
   }
 
   return errors;
@@ -94,9 +94,6 @@ function ErrorState({
         No fue posible completar el análisis.
       </h1>
       <p className="mt-3 text-base leading-7 text-muted">{message}</p>
-      <p className="mt-2 text-sm leading-6 text-muted">
-        Verifique la conexión con el servicio e intente nuevamente.
-      </p>
       <div className="mt-8 w-full border-y border-line bg-surface px-5 py-5 text-left sm:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button className="w-full sm:w-auto" onClick={onRetry}>
@@ -124,7 +121,7 @@ export function ClinicalSupportApp() {
     !values.sex ||
     !values.chiefComplaint.trim() ||
     !values.symptoms.trim() ||
-    !values.image;
+    Boolean(errors.image);
 
   function handleValueChange(field: Exclude<ClinicalFormField, "image">, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -138,7 +135,7 @@ export function ClinicalSupportApp() {
 
   function handleImageRemove() {
     setValues((current) => ({ ...current, image: null }));
-    setErrors((current) => ({ ...current, image: "Adjunte una radiografía para continuar." }));
+    setErrors((current) => ({ ...current, image: undefined }));
   }
 
   async function submitAnalysis() {

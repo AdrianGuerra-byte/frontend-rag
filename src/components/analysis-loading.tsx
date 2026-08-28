@@ -44,7 +44,7 @@ export function AnalysisLoading() {
         Analizando caso
       </h1>
       <p className="mt-3 max-w-lg text-[15px] leading-6 text-muted">
-        Procesando información clínica y consultando la base de conocimiento médico.
+        Procesando la información clínica y consultando la evidencia médica.
       </p>
 
       <div className="mt-9 flex items-center justify-center">
@@ -61,7 +61,7 @@ export function AnalysisLoading() {
           ))}
         </div>
         <p className="mt-4 text-xs leading-5 text-muted">
-          El proceso puede tardar unos minutos según la disponibilidad del servicio.
+          El procesamiento puede tardar alrededor de un minuto. Esta pantalla permanecerá activa hasta recibir el resultado.
         </p>
       </div>
     </section>

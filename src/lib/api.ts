@@ -12,18 +12,46 @@ import type {
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, "") || "";
 const HEALTH_TIMEOUT_MS = 10_000;
-const ANALYSIS_TIMEOUT_MS = 120_000;
+const ANALYSIS_TIMEOUT_MS = 180_000;
 const DEFAULT_TIMEOUT_MS = 15_000;
+const NETWORK_ERROR_MESSAGE = "No fue posible conectar con el servicio de análisis.";
+const ANALYSIS_TIMEOUT_MESSAGE =
+  "El análisis está tardando más de lo esperado. Intenta nuevamente.";
+const CONFIGURATION_ERROR_MESSAGE = "El servicio de análisis no está configurado.";
 
 export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status: number = 0,
+    public readonly code: string | null = null,
   ) {
     super(message);
     this.name = "ApiError";
   }
 }
+
+const backendErrorMessages: Record<string, string> = {
+  ANALYSIS_BUSY: "El sistema está procesando otro análisis. Intenta nuevamente en unos momentos.",
+  INVALID_IMAGE: "La imagen seleccionada no es válida.",
+  IMAGE_TOO_LARGE: "La imagen supera el tamaño permitido.",
+  UNSUPPORTED_IMAGE: "El formato de la imagen no es compatible.",
+  VALIDATION_ERROR: "Revisa los datos del caso antes de continuar.",
+  VISION_ERROR: "No fue posible procesar la imagen en este momento.",
+  VISION_INVALID_IMAGE: "La imagen seleccionada no es válida.",
+  VISION_UNAVAILABLE: "No fue posible procesar la imagen en este momento.",
+  VISION_MODEL_NOT_CONFIGURED: "El análisis de imagen no está disponible temporalmente.",
+  VISION_MODEL_UNAVAILABLE: "El análisis de imagen no está disponible temporalmente.",
+  VISION_INVALID_RESPONSE: "El análisis de imagen devolvió una respuesta no válida.",
+  VISION_TIMEOUT: "El análisis de la imagen tardó más de lo esperado.",
+  RAG_UNAVAILABLE: "No fue posible consultar la base médica en este momento.",
+  SYNTHESIS_ERROR: "No fue posible completar el análisis.",
+  SYNTHESIS_MODEL_NOT_CONFIGURED: "El servicio de análisis no está disponible temporalmente.",
+  SYNTHESIS_UNAVAILABLE: "No fue posible completar el análisis en este momento.",
+  SYNTHESIS_MODEL_UNAVAILABLE: "El servicio de análisis no está disponible temporalmente.",
+  SYNTHESIS_INVALID_RESPONSE: "No fue posible validar el resultado del análisis.",
+  SYNTHESIS_TIMEOUT: "El análisis tardó más de lo esperado.",
+  INTERNAL_ERROR: "No fue posible completar el análisis.",
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -41,6 +69,10 @@ function isImageQuality(value: unknown): value is ImageQuality {
       value.status === "not_provided") &&
     typeof value.message === "string"
   );
+}
+
+function isOptionalImageQuality(value: unknown): value is ImageQuality | null | undefined {
+  return value == null || isImageQuality(value);
 }
 
 function isPossibleFinding(value: unknown): value is PossibleFinding {
@@ -77,7 +109,10 @@ function isMedicalSource(value: unknown): value is MedicalSource {
   return (
     isRecord(value) &&
     typeof value.title === "string" &&
-    typeof value.source === "string" &&
+    (value.source === undefined || value.source === null || typeof value.source === "string") &&
+    (value.institution === undefined ||
+      value.institution === null ||
+      typeof value.institution === "string") &&
     typeof value.document === "string" &&
     (value.page === undefined || value.page === null ||
       (typeof value.page === "number" && Number.isInteger(value.page) && value.page >= 1))
@@ -88,7 +123,7 @@ function parseAnalysis(value: unknown): ClinicalAnalysis {
   if (
     !isRecord(value) ||
     typeof value.analysisId !== "string" ||
-    !isImageQuality(value.imageQuality) ||
+    !isOptionalImageQuality(value.imageQuality) ||
     !Array.isArray(value.possibleFindings) ||
     !value.possibleFindings.every(isPossibleFinding) ||
     !Array.isArray(value.differentialDiagnoses) ||
@@ -138,54 +173,88 @@ function extractDetail(payload: unknown) {
   return typeof payload.message === "string" ? payload.message : null;
 }
 
+function extractErrorCode(payload: unknown) {
+  if (!isRecord(payload)) {
+    return null;
+  }
+
+  const candidates: unknown[] = [
+    payload.code,
+    payload.errorCode,
+    payload.error_code,
+    payload.detail,
+    payload.message,
+  ];
+
+  if (isRecord(payload.error)) {
+    candidates.push(payload.error.code, payload.error.errorCode, payload.error.error_code);
+  }
+
+  if (isRecord(payload.detail)) {
+    candidates.push(payload.detail.code, payload.detail.errorCode, payload.detail.error_code);
+  }
+
+  return candidates.find(
+    (candidate): candidate is string =>
+      typeof candidate === "string" &&
+      Object.prototype.hasOwnProperty.call(backendErrorMessages, candidate),
+  ) ?? null;
+}
+
 const knownErrorTranslations: Record<string, string> = {
   "Unsupported image format. Use JPEG, JPG, PNG, or WEBP.":
     "Formato de imagen no compatible. Use JPEG, JPG, PNG o WEBP.",
-  "Image file does not exist.": "La imagen seleccionada no existe.",
-  "Image file cannot be read.": "No fue posible leer la imagen seleccionada.",
-  "Image exceeds the 10 MB upload limit.": "La imagen supera el límite de carga de 10 MB.",
-  "Uploaded image is empty.": "La imagen enviada está vacía.",
+  "Image file does not exist.": "La imagen seleccionada no es válida.",
+  "Image file cannot be read.": "La imagen seleccionada no es válida.",
+  "Image exceeds the 10 MB upload limit.": "La imagen supera el tamaño permitido.",
+  "Uploaded image is empty.": "La imagen seleccionada no es válida.",
   "Unable to generate clinical-support analysis.":
     "El servicio no pudo generar el análisis de apoyo clínico.",
   "Analysis not found.": "No se encontró el análisis solicitado.",
-  VISION_ERROR: "No fue posible analizar la imagen en este momento.",
-  VISION_MODEL_NOT_CONFIGURED: "El análisis de la imagen no está disponible.",
-  VISION_UNAVAILABLE: "No fue posible analizar la imagen en este momento.",
-  VISION_MODEL_UNAVAILABLE: "El análisis de la imagen no está disponible en este momento.",
-  VISION_INVALID_RESPONSE: "El análisis de la imagen devolvió una respuesta no válida.",
-  VISION_INVALID_IMAGE: "La imagen seleccionada no es válida.",
-  SYNTHESIS_ERROR: "No fue posible preparar el resultado clínico.",
-  SYNTHESIS_MODEL_NOT_CONFIGURED: "No fue posible preparar el resultado clínico.",
-  SYNTHESIS_UNAVAILABLE: "No fue posible preparar el resultado clínico en este momento.",
-  SYNTHESIS_MODEL_UNAVAILABLE: "No fue posible preparar el resultado clínico en este momento.",
-  SYNTHESIS_INVALID_RESPONSE: "El resultado clínico no pudo validarse.",
 };
 
-function getHttpErrorMessage(status: number, detail: string | null) {
-  if (detail) {
-    const translatedDetail = knownErrorTranslations[detail] ??
-      (Object.values(knownErrorTranslations).includes(detail) ? detail : null);
-    if (translatedDetail) {
-      return translatedDetail;
-    }
+function getHttpErrorMessage(status: number, code: string | null, detail: string | null) {
+  if (code && Object.prototype.hasOwnProperty.call(backendErrorMessages, code)) {
+    return backendErrorMessages[code];
+  }
+
+  if (detail && Object.prototype.hasOwnProperty.call(knownErrorTranslations, detail)) {
+    return knownErrorTranslations[detail];
+  }
+
+  if (status === 413) {
+    return backendErrorMessages.IMAGE_TOO_LARGE;
   }
 
   if (status === 422) {
-    return "La información del caso no es válida. Revise los campos e intente nuevamente.";
+    return backendErrorMessages.VALIDATION_ERROR;
+  }
+
+  if (status === 429) {
+    return backendErrorMessages.ANALYSIS_BUSY;
+  }
+
+  if (status === 408) {
+    return ANALYSIS_TIMEOUT_MESSAGE;
   }
 
   if (status === 503) {
-    return "El servicio de análisis no está disponible en este momento. Intente nuevamente.";
+    return "El servicio de análisis no está disponible temporalmente.";
   }
 
   if (status >= 500) {
-    return "No fue posible completar el análisis en este momento. Intente nuevamente.";
+    return backendErrorMessages.INTERNAL_ERROR;
   }
 
-  return "El servicio no pudo completar la solicitud. Intente nuevamente.";
+  return "El servicio no pudo completar la solicitud.";
 }
 
-async function requestJson(path: string, init: RequestInit, timeoutMs: number) {
+async function requestJson(
+  path: string,
+  init: RequestInit,
+  timeoutMs: number,
+  timeoutMessage = NETWORK_ERROR_MESSAGE,
+) {
   const apiUrl = getApiUrl();
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
@@ -211,12 +280,17 @@ async function requestJson(path: string, init: RequestInit, timeoutMs: number) {
         // Use the status-based message below when the response is not JSON.
       }
 
+      const code = extractErrorCode(payload);
       const detail = extractDetail(payload);
       const safeDetail = detail && !/traceback|stack trace|exception|file "/i.test(detail)
         ? detail.slice(0, 240)
         : null;
 
-      throw new ApiError(getHttpErrorMessage(response.status, safeDetail), response.status);
+      throw new ApiError(
+        getHttpErrorMessage(response.status, code, safeDetail),
+        response.status,
+        code,
+      );
     }
 
     try {
@@ -230,10 +304,10 @@ async function requestJson(path: string, init: RequestInit, timeoutMs: number) {
     }
 
     if (error instanceof Error && error.name === "AbortError") {
-      throw new ApiError("El análisis tardó demasiado. Intente nuevamente.", 408);
+      throw new ApiError(timeoutMessage, 408);
     }
 
-    throw new ApiError("No fue posible conectar con el servicio. Verifique su conexión e intente nuevamente.");
+    throw new ApiError(NETWORK_ERROR_MESSAGE);
   } finally {
     window.clearTimeout(timeoutId);
   }
@@ -241,7 +315,16 @@ async function requestJson(path: string, init: RequestInit, timeoutMs: number) {
 
 function getApiUrl() {
   if (!API_URL) {
-    throw new ApiError("El servicio de análisis no está configurado.");
+    throw new ApiError(CONFIGURATION_ERROR_MESSAGE);
+  }
+
+  try {
+    const parsedUrl = new URL(API_URL);
+    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+      throw new Error("Unsupported API URL protocol");
+    }
+  } catch {
+    throw new ApiError(NETWORK_ERROR_MESSAGE);
   }
 
   return API_URL;
@@ -253,31 +336,49 @@ export async function getHealth() {
 }
 
 export async function analyzeCase(values: ClinicalFormValues) {
-  if (!values.image) {
-    throw new ApiError("Adjunte una radiografía para continuar.", 400);
+  let payload: unknown;
+
+  if (values.image) {
+    const formData = new FormData();
+    formData.append("age", values.age.trim());
+    formData.append("sex", values.sex.trim());
+    formData.append("chief_complaint", values.chiefComplaint.trim());
+    formData.append("symptoms", values.symptoms.trim());
+
+    if (values.signs.trim()) {
+      formData.append("signs", values.signs.trim());
+    }
+
+    if (values.medicalHistory.trim()) {
+      formData.append("medical_history", values.medicalHistory.trim());
+    }
+
+    formData.append("image", values.image, values.image.name);
+    payload = await requestJson(
+      "/api/analyze",
+      { body: formData, method: "POST" },
+      ANALYSIS_TIMEOUT_MS,
+      ANALYSIS_TIMEOUT_MESSAGE,
+    );
+  } else {
+    payload = await requestJson(
+      "/api/analyze/text",
+      {
+        body: JSON.stringify({
+          age: values.age.trim() ? Number(values.age) : null,
+          sex: values.sex.trim(),
+          chiefComplaint: values.chiefComplaint.trim(),
+          symptoms: values.symptoms.trim(),
+          signs: values.signs.trim(),
+          medicalHistory: values.medicalHistory.trim(),
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      },
+      ANALYSIS_TIMEOUT_MS,
+      ANALYSIS_TIMEOUT_MESSAGE,
+    );
   }
-
-  const formData = new FormData();
-  formData.append("age", values.age);
-  formData.append("sex", values.sex);
-  formData.append("chief_complaint", values.chiefComplaint.trim());
-  formData.append("symptoms", values.symptoms.trim());
-
-  if (values.signs.trim()) {
-    formData.append("signs", values.signs.trim());
-  }
-
-  if (values.medicalHistory.trim()) {
-    formData.append("medical_history", values.medicalHistory.trim());
-  }
-
-  formData.append("image", values.image, values.image.name);
-
-  const payload = await requestJson(
-    "/api/analyze",
-    { body: formData, method: "POST" },
-    ANALYSIS_TIMEOUT_MS,
-  );
 
   return parseAnalysis(payload);
 }
@@ -307,5 +408,5 @@ export function getApiErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return "No fue posible completar el análisis. Verifique la conexión con el servicio e intente nuevamente.";
+  return NETWORK_ERROR_MESSAGE;
 }

@@ -1,10 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Apoyo Clínico | Apoyo a la decisión clínica",
+  title: "Apoyo clínico",
   description:
-    "Prototipo académico de apoyo a la decisión clínica para el análisis de radiografías.",
+    "Prototipo académico de apoyo a la decisión clínica para el análisis visual de estudios radiográficos.",
+  applicationName: "Apoyo clínico",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0d5a55",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

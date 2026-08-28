@@ -102,7 +102,7 @@ export function ClinicalForm({
           Nuevo análisis clínico
         </h1>
         <p className="mt-3 text-[15px] leading-6 text-muted">
-          Registre la información clínica disponible y adjunte la radiografía para obtener una segunda opinión asistida.
+          Registre la información clínica disponible y, si cuenta con ella, adjunte una radiografía para obtener una segunda opinión asistida.
         </p>
       </div>
 
@@ -120,7 +120,7 @@ export function ClinicalForm({
       <form className="relative" noValidate onSubmit={onSubmit}>
         <div className="border-t border-line py-6 sm:py-7">
           <FormSectionHeading
-            description="Complete los campos requeridos para contextualizar la imagen."
+            description="Complete los campos requeridos para contextualizar el caso."
             index="01"
             title="Paciente"
           />
@@ -258,9 +258,9 @@ export function ClinicalForm({
 
         <div className="border-t border-line py-6 sm:py-7">
           <FormSectionHeading
-            description="Suba una imagen existente o tome una fotografía desde el dispositivo."
+            description="Opcionalmente, suba una imagen existente o tome una fotografía desde el dispositivo."
             index="04"
-            title={<>Estudio radiográfico<RequiredMark /></>}
+            title="Estudio radiográfico (opcional)"
           />
           <ImageUpload
             error={errors.image}
@@ -269,7 +269,7 @@ export function ClinicalForm({
             onRemove={onImageRemove}
           />
           {!errors.image ? (
-            <p className="mt-2 text-xs text-muted">Campo requerido para este flujo radiográfico.</p>
+            <p className="mt-2 text-xs text-muted">Puede enviar el caso solo con la información clínica.</p>
           ) : null}
         </div>
 

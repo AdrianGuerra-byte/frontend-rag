@@ -1,6 +1,6 @@
 # Clinical Support
 
-Frontend Next.js del prototipo académico de apoyo a la decisión clínica. Permite registrar un caso, adjuntar una radiografía y mostrar el resultado estructurado que devuelve el backend FastAPI. No realiza diagnósticos ni sustituye el criterio de un profesional de la salud.
+Frontend Next.js del prototipo académico de apoyo a la decisión clínica. Permite registrar un caso, adjuntar opcionalmente una radiografía y mostrar el resultado estructurado que devuelve el backend FastAPI. No realiza diagnósticos ni sustituye el criterio de un profesional de la salud.
 
 ## Requisitos
 
@@ -22,7 +22,7 @@ Abra [http://localhost:3000](http://localhost:3000). El archivo `.env.local` deb
 NEXT_PUBLIC_API_URL=https://su-tunel-https-del-backend.example
 ```
 
-El frontend no incluye un proxy ni una ruta API propia. `NEXT_PUBLIC_API_URL` es la única configuración del servicio y debe definirse antes de compilar para Vercel. El backend debe permitir el origen del frontend mediante CORS.
+El frontend no incluye un proxy ni una ruta API propia. `NEXT_PUBLIC_API_URL` es la única configuración del servicio y debe definirse antes de compilar. El backend debe permitir el origen del frontend mediante CORS.
 
 ## API utilizada
 
@@ -30,12 +30,13 @@ El módulo `src/lib/api.ts` centraliza las llamadas a:
 
 - `GET /health`
 - `POST /api/analyze` con `multipart/form-data` y los campos `age`, `sex`, `chief_complaint`, `symptoms`, `signs`, `medical_history` e `image`
+- `POST /api/analyze/text` con JSON para análisis basados únicamente en los campos clínicos
 - `GET /api/analyses`
 - `GET /api/analyses/{id}`
 
 El resultado se valida contra el contrato real del backend: `analysisId`, `imageQuality`, `possibleFindings`, `differentialDiagnoses`, `redFlags`, `missingInformation`, `referral`, `sources` y `limitations`.
 
-El análisis tarda hasta 120 segundos antes de mostrar un error de timeout. La pantalla de procesamiento permanece estable durante toda la solicitud.
+El análisis tarda hasta 180 segundos antes de mostrar un error de timeout. La pantalla de procesamiento permanece estable durante toda la solicitud.
 
 ## Verificación
 
@@ -47,13 +48,15 @@ pnpm build
 
 `pnpm build` usa el compilador Webpack integrado de Next.js para mantener un build reproducible en el entorno actual. No se requiere un servidor Node personalizado.
 
-## Despliegue en Vercel
+## Despliegue
 
-1. Importe este proyecto en Vercel.
-2. Mantenga el framework como Next.js y el comando de build estándar (`pnpm build`).
-3. Configure `NEXT_PUBLIC_API_URL` con la URL HTTPS pública vigente de FastAPI antes del build.
-4. En FastAPI, agregue el dominio de Vercel a `CORS_ORIGINS`.
-5. Despliegue y pruebe el flujo desde un teléfono y un escritorio.
+El proyecto puede desplegarse en cualquier entorno compatible con una aplicación Next.js administrada por Node.js:
+
+1. Configure `NEXT_PUBLIC_API_URL` con la URL HTTPS pública vigente de FastAPI antes del build.
+2. Ejecute `pnpm build`.
+3. Inicie el servidor con `pnpm start`.
+4. En FastAPI, agregue el origen público del frontend a `CORS_ORIGINS`.
+5. Pruebe el flujo desde un teléfono y un escritorio.
 
 No exponga Ollama directamente. Si aparece un error CORS, el origen que falta debe agregarse en la configuración CORS del backend; el navegador no se puede corregir de forma segura desde este frontend.
 

@@ -31,14 +31,15 @@ export interface Referral {
 
 export interface MedicalSource {
   title: string;
-  source: string;
+  source?: string | null;
+  institution?: string | null;
   document: string;
   page?: number | null;
 }
 
 export interface ClinicalAnalysis {
   analysisId: string;
-  imageQuality: ImageQuality;
+  imageQuality?: ImageQuality | null;
   possibleFindings: PossibleFinding[];
   differentialDiagnoses: DifferentialDiagnosis[];
   redFlags: string[];

@@ -7,6 +7,7 @@ import type {
   ClinicalAnalysis,
   DifferentialDiagnosis,
   FindingConfidence,
+  ImageQuality,
   ImageQualityStatus,
   ReferralPriority,
 } from "@/src/types/analysis";
@@ -43,7 +44,7 @@ const knownImageMessages: Record<string, string> = {
     "No se proporcionó una imagen; se está utilizando un análisis basado solo en texto.",
 };
 
-function getImageQualityLabel(analysis: ClinicalAnalysis["imageQuality"]) {
+function getImageQualityLabel(analysis: ImageQuality) {
   if (analysis.message.startsWith("Image quality is limited:")) {
     return "Limitada";
   }
@@ -51,7 +52,7 @@ function getImageQualityLabel(analysis: ClinicalAnalysis["imageQuality"]) {
   return imageQualityLabels[analysis.status];
 }
 
-function getImageQualityMessage(analysis: ClinicalAnalysis["imageQuality"]) {
+function getImageQualityMessage(analysis: ImageQuality) {
   const knownMessage = knownImageMessages[analysis.message];
   if (knownMessage) {
     return knownMessage;
@@ -125,9 +126,13 @@ function DifferentialItem({
 }
 
 export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps) {
-  const qualityIsAdequate = analysis.imageQuality.status === "adequate";
-  const imageQualityLabel = getImageQualityLabel(analysis.imageQuality);
-  const imageQualityMessage = getImageQualityMessage(analysis.imageQuality);
+  const qualityIsAdequate = analysis.imageQuality?.status === "adequate";
+  const imageQualityLabel = analysis.imageQuality
+    ? getImageQualityLabel(analysis.imageQuality)
+    : "No proporcionada";
+  const imageQualityMessage = analysis.imageQuality
+    ? getImageQualityMessage(analysis.imageQuality)
+    : "Sin estudio radiográfico adjunto; el resultado se basa en la información clínica.";
   const hasRedFlags = analysis.redFlags.length > 0;
   const referralNeedsAttention = analysis.referral.recommended;
   const referralTitle = referralNeedsAttention
@@ -177,12 +182,16 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
           <span
             className={cn(
               "inline-flex w-fit shrink-0 items-center gap-2 rounded-[var(--radius-control)] border px-3 py-1.5 text-xs font-semibold",
-              qualityIsAdequate
-                ? "border-success/20 bg-success-soft text-success"
-                : "border-warning/25 bg-warning-soft text-warning",
+              !analysis.imageQuality
+                ? "border-line bg-surface-subtle text-muted"
+                : qualityIsAdequate
+                  ? "border-success/20 bg-success-soft text-success"
+                  : "border-warning/25 bg-warning-soft text-warning",
             )}
           >
-            {qualityIsAdequate ? (
+            {!analysis.imageQuality ? (
+              <Info aria-hidden="true" className="size-4" />
+            ) : qualityIsAdequate ? (
               <CheckCircle2 aria-hidden="true" className="size-4" />
             ) : (
               <AlertCircle aria-hidden="true" className="size-4" />
@@ -332,10 +341,10 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
                 <div>
                   <p className="text-sm font-semibold leading-6 text-ink">{source.title}</p>
                   <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm leading-5 text-muted sm:grid-cols-3">
-                    {source.source.trim() ? (
+                    {source.source?.trim() || source.institution?.trim() ? (
                       <div>
                         <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Institución</dt>
-                        <dd className="mt-1">{source.source}</dd>
+                        <dd className="mt-1">{source.source?.trim() || source.institution?.trim()}</dd>
                       </div>
                     ) : null}
                     <div>
