@@ -338,49 +338,24 @@ export async function getHealth() {
 }
 
 export async function analyzeCase(values: ClinicalFormValues) {
-  let payload: unknown;
+  const formData = new FormData();
+  formData.append("age", values.age.trim());
+  formData.append("sex", values.sex.trim());
+  formData.append("chief_complaint", values.chiefComplaint.trim());
+  formData.append("symptoms", values.symptoms.trim());
+  formData.append("signs", values.signs.trim());
+  formData.append("medical_history", values.medicalHistory.trim());
 
   if (values.image) {
-    const formData = new FormData();
-    formData.append("age", values.age.trim());
-    formData.append("sex", values.sex.trim());
-    formData.append("chief_complaint", values.chiefComplaint.trim());
-    formData.append("symptoms", values.symptoms.trim());
-
-    if (values.signs.trim()) {
-      formData.append("signs", values.signs.trim());
-    }
-
-    if (values.medicalHistory.trim()) {
-      formData.append("medical_history", values.medicalHistory.trim());
-    }
-
     formData.append("image", values.image, values.image.name);
-    payload = await requestJson(
-      "/api/analyze",
-      { body: formData, method: "POST" },
-      ANALYSIS_TIMEOUT_MS,
-      ANALYSIS_TIMEOUT_MESSAGE,
-    );
-  } else {
-    payload = await requestJson(
-      "/api/analyze/text",
-      {
-        body: JSON.stringify({
-          age: values.age.trim() ? Number(values.age) : null,
-          sex: values.sex.trim(),
-          chiefComplaint: values.chiefComplaint.trim(),
-          symptoms: values.symptoms.trim(),
-          signs: values.signs.trim(),
-          medicalHistory: values.medicalHistory.trim(),
-        }),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      },
-      ANALYSIS_TIMEOUT_MS,
-      ANALYSIS_TIMEOUT_MESSAGE,
-    );
   }
+
+  const payload = await requestJson(
+    "/api/analyze",
+    { body: formData, method: "POST" },
+    ANALYSIS_TIMEOUT_MS,
+    ANALYSIS_TIMEOUT_MESSAGE,
+  );
 
   return parseAnalysis(payload);
 }
