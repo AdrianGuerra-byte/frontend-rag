@@ -27,12 +27,14 @@ export interface Referral {
   recommended: boolean;
   priority: ReferralPriority;
   reason: string;
+  escalation?: string | null;
 }
 
 export interface MedicalSource {
   title: string;
   source?: string | null;
   institution?: string | null;
+  category?: string | null;
   document: string;
   page?: number | null;
 }

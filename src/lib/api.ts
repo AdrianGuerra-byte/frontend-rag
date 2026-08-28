@@ -101,7 +101,8 @@ function isReferral(value: unknown): value is Referral {
       value.priority === "soon" ||
       value.priority === "routine" ||
       value.priority === "not_assessed") &&
-    typeof value.reason === "string"
+    typeof value.reason === "string" &&
+    (value.escalation === undefined || value.escalation === null || typeof value.escalation === "string")
   );
 }
 
@@ -113,6 +114,7 @@ function isMedicalSource(value: unknown): value is MedicalSource {
     (value.institution === undefined ||
       value.institution === null ||
       typeof value.institution === "string") &&
+    (value.category === undefined || value.category === null || typeof value.category === "string") &&
     typeof value.document === "string" &&
     (value.page === undefined || value.page === null ||
       (typeof value.page === "number" && Number.isInteger(value.page) && value.page >= 1))
