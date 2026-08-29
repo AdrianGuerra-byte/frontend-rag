@@ -212,7 +212,7 @@ export function ClinicalSupportApp() {
                   onValueChange={handleValueChange}
                 />
               ) : null}
-              {viewState === "loading" ? <AnalysisLoading /> : null}
+              {viewState === "loading" ? <AnalysisLoading hasImage={Boolean(values.image)} /> : null}
               {viewState === "result" && analysis ? (
                 <AnalysisResult analysis={analysis} onNewAnalysis={resetExperience} />
               ) : null}

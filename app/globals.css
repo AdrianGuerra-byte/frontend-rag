@@ -91,6 +91,21 @@ textarea {
   animation: clinical-scan 2.8s ease-in-out infinite;
 }
 
+@keyframes analysis-activity-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.analysis-activity-enter {
+  animation: analysis-activity-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @keyframes screen-enter {
   from {
     opacity: 0;
@@ -132,6 +147,10 @@ textarea {
   }
 
   .clinical-scan-line {
+    animation: none;
+  }
+
+  .analysis-activity-enter {
     animation: none;
   }
 
