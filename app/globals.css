@@ -159,3 +159,48 @@ textarea {
     animation: none;
   }
 }
+
+@media print {
+  @page {
+    margin: 16mm;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  button,
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-result,
+  .print-result * {
+    color: #000 !important;
+    background: transparent !important;
+    border-color: #777 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .print-result {
+    max-width: none !important;
+  }
+
+  .print-result svg {
+    color: #000 !important;
+    stroke: #000 !important;
+  }
+
+  .print-section,
+  .print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .screen-transition,
+  .screen-transition-back {
+    animation: none !important;
+  }
+}

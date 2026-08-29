@@ -1,4 +1,17 @@
-import { AlertCircle, ArrowLeft, CheckCircle2, Info, Plus, TriangleAlert } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Check,
+  CheckCircle2,
+  Copy,
+  Info,
+  Plus,
+  Printer,
+  TriangleAlert,
+} from "lucide-react";
 
 import { Button } from "@/src/components/ui/button";
 import { ProductMark } from "@/src/components/product-mark";
@@ -105,7 +118,7 @@ function DifferentialItem({
   const reasoning = item.reasoning.map((reason) => reason.trim()).filter(Boolean).join(" ");
 
   return (
-    <li className="grid grid-cols-[2rem_minmax(0,1fr)] gap-3 border-t border-line py-5 first:border-t-0 first:pt-0 last:pb-0">
+    <li className="print-avoid-break grid grid-cols-[2rem_minmax(0,1fr)] gap-3 border-t border-line py-5 first:border-t-0 first:pt-0 last:pb-0">
       <span className="pt-0.5 font-mono text-xs font-medium text-primary">
         {String(index).padStart(2, "0")}
       </span>
@@ -178,7 +191,104 @@ function formatPages(pages: number[]) {
   return `Páginas ${pages.slice(0, -1).join(", ")} y ${lastPage}`;
 }
 
+function buildCopySummary({
+  analysis,
+  groupedSources,
+  imageQualityMessage,
+}: {
+  analysis: ClinicalAnalysis;
+  groupedSources: SourceGroup[];
+  imageQualityMessage: string;
+}) {
+  const reasoningFor = (item: DifferentialDiagnosis) =>
+    item.reasoning.map((reason) => reason.trim()).filter(Boolean).join(" ");
+  const escalation = cleanOptional(analysis.referral.escalation);
+  const lines = [
+    "Resultado del análisis clínico",
+    `Evaluación inicial: ${imageQualityMessage}`,
+    "",
+    "Hallazgos relevantes",
+    ...(analysis.possibleFindings.length
+      ? analysis.possibleFindings.map((finding) => `• ${finding.finding}`)
+      : ["No se registraron hallazgos relevantes con la información disponible."]),
+    "",
+    "Posibilidades diagnósticas",
+    ...(analysis.differentialDiagnoses.length
+      ? analysis.differentialDiagnoses.flatMap((item) => {
+          const reasoning = reasoningFor(item);
+          return [
+            `• ${item.diagnosis}`,
+            ...(reasoning ? [`  ${reasoning}`] : []),
+          ];
+        })
+      : ["No se registraron posibilidades diagnósticas con la información disponible."]),
+    "",
+    "Signos de alarma",
+    ...(analysis.redFlags.length
+      ? analysis.redFlags.map((flag) => `• ${flag}`)
+      : ["No se identificaron signos de alarma con la información disponible."]),
+    "",
+    "Información que ayudaría a precisar el caso",
+    ...(analysis.missingInformation.length
+      ? analysis.missingInformation.map((item) => `• ${item}`)
+      : ["No se señalaron datos faltantes en este análisis."]),
+    "",
+    "Siguiente paso clínico",
+    `Prioridad: ${priorityLabels[analysis.referral.priority]}`,
+    `Acción sugerida: ${analysis.referral.reason}`,
+    ...(escalation ? [`Escalamiento: ${escalation}`] : []),
+    "",
+    "Evidencia consultada",
+    ...(groupedSources.length
+      ? groupedSources.flatMap((source) => {
+          const metadata = [
+            source.source ? `Fuente: ${source.source}` : null,
+            source.institution ? `Institución: ${source.institution}` : null,
+            source.category ? `Categoría: ${source.category}` : null,
+            `Documento: ${source.document}`,
+          ].filter((value): value is string => Boolean(value));
+          const pageLabel = formatPages(source.pages);
+
+          return [
+            `• ${source.title}`,
+            ...(pageLabel ? [`  ${pageLabel}`] : []),
+            ...(metadata.length ? [`  ${metadata.join(" · ")}`] : []),
+          ];
+        })
+      : ["No se recuperó evidencia documental para este análisis."]),
+    "",
+    "Limitaciones del análisis",
+    ...(analysis.limitations.length
+      ? analysis.limitations.map((limitation) => `• ${limitation}`)
+      : ["No se registraron limitaciones adicionales."]),
+  ];
+
+  return lines.join("\n");
+}
+
+function copyTextWithFallback(text: string) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  let copied = false;
+  try {
+    copied = document.execCommand("copy");
+  } finally {
+    textarea.remove();
+  }
+
+  if (!copied) {
+    throw new Error("Copy failed");
+  }
+}
+
 export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps) {
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const isTextOnly =
     !analysis.imageQuality || analysis.imageQuality.status === "not_provided";
   const qualityIsAdequate = analysis.imageQuality?.status === "adequate";
@@ -200,10 +310,24 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
       : "No se identificó una necesidad inmediata de valoración especializada";
   const referralEscalation = cleanOptional(analysis.referral.escalation);
   const groupedSources = groupSources(analysis.sources);
+  const copySummary = buildCopySummary({ analysis, groupedSources, imageQualityMessage });
+
+  async function handleCopySummary() {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(copySummary);
+      } else {
+        copyTextWithFallback(copySummary);
+      }
+      setCopyState("copied");
+    } catch {
+      setCopyState("failed");
+    }
+  }
 
   return (
-    <section aria-labelledby="analysis-result-title" className="mx-auto w-full max-w-[760px]">
-      <header className="mb-7 border-b border-line pb-6">
+    <section aria-labelledby="analysis-result-title" className="print-result mx-auto w-full max-w-[760px]">
+      <header className="print-avoid-break mb-7 border-b border-line pb-6">
         <div className="flex items-start gap-3">
           <ProductMark className="size-10" />
           <div className="min-w-0">
@@ -224,13 +348,38 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         <p className="mt-2 text-sm text-muted">
           Apoyo a la decisión clínica · resultado no diagnóstico
         </p>
-        <Button className="mt-5 w-full sm:w-auto" variant="secondary" onClick={onNewAnalysis}>
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          Nuevo análisis
-        </Button>
+        <div className="print-hide mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <Button className="w-full sm:w-auto" variant="secondary" onClick={onNewAnalysis}>
+            <ArrowLeft aria-hidden="true" className="size-4" />
+            Nuevo análisis
+          </Button>
+          <Button className="w-full sm:w-auto" variant="secondary" onClick={() => void handleCopySummary()}>
+            {copyState === "copied" ? (
+              <Check aria-hidden="true" className="size-4" />
+            ) : (
+              <Copy aria-hidden="true" className="size-4" />
+            )}
+            {copyState === "copied"
+              ? "Resumen copiado"
+              : copyState === "failed"
+                ? "No se pudo copiar"
+                : "Copiar resumen"}
+          </Button>
+          <Button className="w-full sm:w-auto" variant="secondary" onClick={() => window.print()}>
+            <Printer aria-hidden="true" className="size-4" />
+            Imprimir
+          </Button>
+        </div>
+        <span aria-live="polite" className="sr-only">
+          {copyState === "copied"
+            ? "Resumen copiado al portapapeles."
+            : copyState === "failed"
+              ? "No fue posible copiar el resumen."
+              : null}
+        </span>
       </header>
 
-      <section aria-labelledby="overview-title" className="border-y border-line bg-surface">
+      <section aria-labelledby="overview-title" className="print-section border-y border-line bg-surface">
         <div className="px-5 py-5 sm:px-6">
           <SectionHeading eyebrow="Resumen" id="overview-title" index="01">
             Evaluación inicial
@@ -265,7 +414,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         </div>
       </section>
 
-      <section aria-labelledby="findings-title" className="mt-10">
+      <section aria-labelledby="findings-title" className="print-section mt-10">
         <SectionHeading eyebrow={hasUsableImage ? "Datos clínicos e imagen" : "Datos clínicos"} id="findings-title" index="02">
           Hallazgos relevantes
         </SectionHeading>
@@ -282,7 +431,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         )}
       </section>
 
-      <section aria-labelledby="differentials-title" className="mt-10">
+      <section aria-labelledby="differentials-title" className="print-section mt-10">
         <SectionHeading eyebrow="Correlación clínica" id="differentials-title" index="03">
           Posibilidades diagnósticas
         </SectionHeading>
@@ -300,7 +449,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         )}
       </section>
 
-      <section aria-labelledby="red-flags-title" className="mt-10">
+      <section aria-labelledby="red-flags-title" className="print-section mt-10">
         <SectionHeading eyebrow="Prioridad clínica" id="red-flags-title" index="04">
           Signos de alarma
         </SectionHeading>
@@ -325,7 +474,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
           {hasRedFlags ? (
             <ul className="mt-5 space-y-3 border-t border-danger/15 pt-4">
               {analysis.redFlags.map((flag, index) => (
-                <li className="flex gap-2 text-sm leading-6 text-danger" key={`${flag}-${index}`}>
+                <li className="print-avoid-break flex gap-2 text-sm leading-6 text-danger" key={`${flag}-${index}`}>
                   <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-danger" />
                   <span>{flag}</span>
                 </li>
@@ -335,14 +484,14 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         </div>
       </section>
 
-      <section aria-labelledby="missing-information-title" className="mt-10">
+      <section aria-labelledby="missing-information-title" className="print-section mt-10">
         <SectionHeading eyebrow="Completitud clínica" id="missing-information-title" index="05">
           Información que ayudaría a precisar el caso
         </SectionHeading>
         {analysis.missingInformation.length ? (
           <ul className="mt-5 space-y-3">
             {analysis.missingInformation.map((item, index) => (
-              <li className="flex gap-2 text-sm leading-6 text-muted" key={`${item}-${index}`}>
+              <li className="print-avoid-break flex gap-2 text-sm leading-6 text-muted" key={`${item}-${index}`}>
                 <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-warning" />
                 <span>{item}</span>
               </li>
@@ -353,7 +502,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         )}
       </section>
 
-      <section aria-labelledby="referral-title" className="mt-10">
+      <section aria-labelledby="referral-title" className="print-section mt-10">
         <SectionHeading eyebrow="Plan de atención" id="referral-title" index="06">
           Siguiente paso clínico
         </SectionHeading>
@@ -383,7 +532,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         </div>
       </section>
 
-      <section aria-labelledby="sources-title" className="mt-11 border-t border-line pt-8">
+      <section aria-labelledby="sources-title" className="print-section mt-11 border-t border-line pt-8">
         <SectionHeading eyebrow="Proveniencia" id="sources-title" index="07">
           Evidencia consultada
         </SectionHeading>
@@ -393,7 +542,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
               const pageLabel = formatPages(source.pages);
 
               return (
-                <li className="grid grid-cols-[2rem_minmax(0,1fr)] gap-3 py-5 first:pt-0 last:pb-0" key={source.document}>
+                <li className="print-avoid-break grid grid-cols-[2rem_minmax(0,1fr)] gap-3 py-5 first:pt-0 last:pb-0" key={source.document}>
                   <span className="pt-0.5 font-mono text-xs font-medium text-primary">
                     {String(index + 1).padStart(2, "0")}
                   </span>
@@ -434,7 +583,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         )}
       </section>
 
-      <section aria-labelledby="limitations-title" className="mt-11 border-t border-line pt-8">
+      <section aria-labelledby="limitations-title" className="print-section mt-11 border-t border-line pt-8">
         <div className="rounded-[var(--radius-panel)] border border-line bg-surface-subtle p-5 sm:p-6">
           <SectionHeading eyebrow="Transparencia" id="limitations-title" index="08">
             Limitaciones del análisis
@@ -442,7 +591,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
           {analysis.limitations.length ? (
             <ul className="mt-5 space-y-3">
               {analysis.limitations.map((limitation, index) => (
-                <li className="flex gap-2 text-sm leading-6 text-muted" key={`${limitation}-${index}`}>
+                <li className="print-avoid-break flex gap-2 text-sm leading-6 text-muted" key={`${limitation}-${index}`}>
                   <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-muted" />
                   <span>{limitation}</span>
                 </li>
@@ -460,7 +609,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         </div>
       </section>
 
-      <div className="flex justify-center py-8 sm:py-10">
+      <div className="print-hide flex justify-center py-8 sm:py-10">
         <Button variant="secondary" onClick={onNewAnalysis}>
           <Plus aria-hidden="true" className="size-4" />
           Nuevo análisis

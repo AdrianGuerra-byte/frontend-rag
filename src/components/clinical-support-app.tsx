@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { Activity } from "lucide-react";
 
 import { AnalysisLoading } from "@/src/components/analysis-loading";
@@ -20,6 +20,26 @@ import type {
 
 type ViewState = "form" | "loading" | "result" | "error";
 
+type DraftField =
+  | "age"
+  | "sex"
+  | "chiefComplaint"
+  | "symptoms"
+  | "signs"
+  | "medicalHistory";
+
+type ClinicalDraft = Pick<ClinicalFormValues, DraftField>;
+
+const DRAFT_STORAGE_KEY = "clinical-support-form-draft";
+const DRAFT_FIELDS: readonly DraftField[] = [
+  "age",
+  "sex",
+  "chiefComplaint",
+  "symptoms",
+  "signs",
+  "medicalHistory",
+];
+
 const initialValues: ClinicalFormValues = {
   age: "",
   sex: "",
@@ -29,6 +49,121 @@ const initialValues: ClinicalFormValues = {
   medicalHistory: "",
   image: null,
 };
+
+const draftListeners = new Set<() => void>();
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function getClinicalDraft(values: ClinicalFormValues): ClinicalDraft {
+  return {
+    age: values.age,
+    sex: values.sex,
+    chiefComplaint: values.chiefComplaint,
+    symptoms: values.symptoms,
+    signs: values.signs,
+    medicalHistory: values.medicalHistory,
+  };
+}
+
+function getDraftSnapshot() {
+  try {
+    return window.sessionStorage.getItem(DRAFT_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function getServerDraftSnapshot() {
+  return "";
+}
+
+function subscribeToDraft(listener: () => void) {
+  draftListeners.add(listener);
+  return () => draftListeners.delete(listener);
+}
+
+function notifyDraftListeners() {
+  for (const listener of draftListeners) {
+    listener();
+  }
+}
+
+function parseClinicalDraft(snapshot: string) {
+  if (!snapshot) {
+    return {};
+  }
+
+  try {
+    const parsedDraft: unknown = JSON.parse(snapshot);
+    if (!isRecord(parsedDraft)) {
+      return {};
+    }
+
+    const draft: Partial<ClinicalDraft> = {};
+    for (const field of DRAFT_FIELDS) {
+      if (typeof parsedDraft[field] === "string") {
+        draft[field] = parsedDraft[field];
+      }
+    }
+
+    return draft;
+  } catch {
+    return {};
+  }
+}
+
+function mergeDraftValues(
+  values: ClinicalFormValues,
+  draft: Partial<ClinicalDraft>,
+  dirtyFields: Partial<Record<DraftField, boolean>>,
+) {
+  const mergedValues = { ...values };
+
+  for (const field of DRAFT_FIELDS) {
+    if (!dirtyFields[field] && draft[field] !== undefined) {
+      mergedValues[field] = draft[field];
+    }
+  }
+
+  return mergedValues;
+}
+
+function writeClinicalDraft(values: ClinicalFormValues) {
+  const draft = getClinicalDraft(values);
+  const hasDraftContent = DRAFT_FIELDS.some((field) => draft[field].trim().length > 0);
+
+  try {
+    if (hasDraftContent) {
+      const serializedDraft = JSON.stringify(draft);
+      if (window.sessionStorage.getItem(DRAFT_STORAGE_KEY) === serializedDraft) {
+        return;
+      }
+      window.sessionStorage.setItem(DRAFT_STORAGE_KEY, serializedDraft);
+    } else {
+      if (!window.sessionStorage.getItem(DRAFT_STORAGE_KEY)) {
+        return;
+      }
+      window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+    }
+    notifyDraftListeners();
+  } catch {
+    // Ignore unavailable or full session storage.
+  }
+}
+
+function clearClinicalDraft() {
+  try {
+    if (!window.sessionStorage.getItem(DRAFT_STORAGE_KEY)) {
+      return;
+    }
+    window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+    notifyDraftListeners();
+  } catch {
+    // Ignore unavailable session storage.
+  }
+}
 
 function validateForm(values: ClinicalFormValues, currentErrors: ClinicalFormErrors) {
   const errors: ClinicalFormErrors = {};
@@ -114,18 +249,28 @@ export function ClinicalSupportApp() {
   const [errors, setErrors] = useState<ClinicalFormErrors>({});
   const [analysis, setAnalysis] = useState<ClinicalAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [dirtyDraftFields, setDirtyDraftFields] = useState<Partial<Record<DraftField, boolean>>>({});
   const isSubmittingRef = useRef(false);
+  const draftSnapshot = useSyncExternalStore(
+    subscribeToDraft,
+    getDraftSnapshot,
+    getServerDraftSnapshot,
+  );
+  const storedDraft = parseClinicalDraft(draftSnapshot);
+  const formValues = mergeDraftValues(values, storedDraft, dirtyDraftFields);
 
   const isFormIncomplete =
-    !values.age.trim() ||
-    !values.sex ||
-    !values.chiefComplaint.trim() ||
-    !values.symptoms.trim() ||
+    !formValues.age.trim() ||
+    !formValues.sex ||
+    !formValues.chiefComplaint.trim() ||
+    !formValues.symptoms.trim() ||
     Boolean(errors.image);
 
   function handleValueChange(field: Exclude<ClinicalFormField, "image">, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
+    setDirtyDraftFields((current) => ({ ...current, [field]: true }));
     setErrors((current) => ({ ...current, [field]: undefined }));
+    writeClinicalDraft({ ...formValues, [field]: value });
   }
 
   function handleImageSelect(file: File | null, error: string | null) {
@@ -148,7 +293,8 @@ export function ClinicalSupportApp() {
     setViewState("loading");
 
     try {
-      const result = await analyzeCase(values);
+      const result = await analyzeCase(formValues);
+      clearClinicalDraft();
       setAnalysis(result);
       setViewState("result");
     } catch (error) {
@@ -161,7 +307,7 @@ export function ClinicalSupportApp() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const nextErrors = validateForm(values, errors);
+    const nextErrors = validateForm(formValues, errors);
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length) {
@@ -173,7 +319,9 @@ export function ClinicalSupportApp() {
 
   function resetExperience() {
     isSubmittingRef.current = false;
+    clearClinicalDraft();
     setValues(initialValues);
+    setDirtyDraftFields({});
     setErrors({});
     setAnalysis(null);
     setErrorMessage(null);
@@ -183,7 +331,7 @@ export function ClinicalSupportApp() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen w-full max-w-[820px] flex-col bg-surface md:border-x md:border-line">
-        <main className="flex-1 pt-[env(safe-area-inset-top)]">
+        <main aria-busy={viewState === "loading"} className="flex-1 pt-[env(safe-area-inset-top)]">
           <div
             className={cn(
               "mx-auto w-full px-4 py-6 pb-8 sm:px-6 sm:py-8 sm:pb-10",
@@ -205,7 +353,7 @@ export function ClinicalSupportApp() {
                   errors={errors}
                   formMessage={errorMessage}
                   isSubmitDisabled={isFormIncomplete}
-                  values={values}
+                  values={formValues}
                   onImageRemove={handleImageRemove}
                   onImageSelect={handleImageSelect}
                   onSubmit={handleSubmit}
