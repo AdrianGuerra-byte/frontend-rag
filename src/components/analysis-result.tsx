@@ -42,6 +42,7 @@ const priorityLabels: Record<ReferralPriority, string> = {
 
 const imageQualityLabels: Record<ImageQualityStatus, string> = {
   adequate: "Adecuada",
+  limited: "Calidad limitada",
   insufficient: "Insuficiente",
   not_provided: "No proporcionada",
 };
@@ -54,10 +55,6 @@ const knownImageMessages: Record<string, string> = {
 };
 
 function getImageQualityLabel(analysis: ImageQuality) {
-  if (analysis.message.startsWith("Image quality is limited:")) {
-    return "Limitada";
-  }
-
   return imageQualityLabels[analysis.status];
 }
 
@@ -292,7 +289,9 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
   const isTextOnly =
     !analysis.imageQuality || analysis.imageQuality.status === "not_provided";
   const qualityIsAdequate = analysis.imageQuality?.status === "adequate";
-  const hasUsableImage = qualityIsAdequate;
+  const qualityIsLimited = analysis.imageQuality?.status === "limited";
+  const qualityIsInsufficient = analysis.imageQuality?.status === "insufficient";
+  const hasUsableImage = qualityIsAdequate || qualityIsLimited;
   const imageQualityMessage = isTextOnly
     ? NO_IMAGE_MESSAGE
     : analysis.imageQuality
@@ -399,11 +398,15 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
                   "inline-flex w-fit shrink-0 items-center gap-2 rounded-[var(--radius-control)] border px-3 py-1.5 text-xs font-semibold",
                   qualityIsAdequate
                     ? "border-success/20 bg-success-soft text-success"
-                    : "border-warning/25 bg-warning-soft text-warning",
+                    : qualityIsLimited
+                      ? "border-warning/25 bg-warning-soft text-warning"
+                      : "border-danger/25 bg-danger-soft text-danger",
                 )}
               >
                 {qualityIsAdequate ? (
                   <CheckCircle2 aria-hidden="true" className="size-4" />
+                ) : qualityIsInsufficient ? (
+                  <TriangleAlert aria-hidden="true" className="size-4" />
                 ) : (
                   <AlertCircle aria-hidden="true" className="size-4" />
                 )}

@@ -1,4 +1,4 @@
-export type ImageQualityStatus = "adequate" | "insufficient" | "not_provided";
+export type ImageQualityStatus = "adequate" | "limited" | "insufficient" | "not_provided";
 
 export type FindingConfidence = "low" | "moderate" | "high";
 

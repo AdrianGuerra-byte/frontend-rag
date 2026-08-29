@@ -65,6 +65,7 @@ function isImageQuality(value: unknown): value is ImageQuality {
   return (
     isRecord(value) &&
     (value.status === "adequate" ||
+      value.status === "limited" ||
       value.status === "insufficient" ||
       value.status === "not_provided") &&
     typeof value.message === "string"
