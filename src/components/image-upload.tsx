@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, FileImage, ImagePlus, Upload, X } from "lucide-react";
 
 import { Button } from "@/src/components/ui/button";
@@ -16,6 +16,8 @@ export const ACCEPTED_IMAGE_TYPES = [
 
 const ACCEPTED_IMAGE_EXTENSIONS = new Set([".jpeg", ".jpg", ".png", ".webp"]);
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const PREVIEW_ERROR_MESSAGE =
+  "No fue posible preparar la vista previa. Seleccione otra imagen.";
 
 interface ImageUploadProps {
   file: File | null;
@@ -25,6 +27,14 @@ interface ImageUploadProps {
 }
 
 export function getImageValidationError(file: File) {
+  if (file.size === 0) {
+    return "La imagen seleccionada está vacía. Elija otro archivo.";
+  }
+
+  if (file.size > MAX_IMAGE_BYTES) {
+    return "La imagen no puede superar los 10 MB.";
+  }
+
   const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
   const hasAcceptedType = ACCEPTED_IMAGE_TYPES.includes(
     file.type as (typeof ACCEPTED_IMAGE_TYPES)[number],
@@ -32,14 +42,6 @@ export function getImageValidationError(file: File) {
 
   if (!hasAcceptedType && !ACCEPTED_IMAGE_EXTENSIONS.has(extension)) {
     return "Seleccione una imagen JPEG, JPG, PNG o WEBP.";
-  }
-
-  if (file.size > MAX_IMAGE_BYTES) {
-    return "La imagen no puede superar los 10 MB.";
-  }
-
-  if (file.size === 0) {
-    return "La imagen seleccionada está vacía. Elija otro archivo.";
   }
 
   return null;
@@ -51,6 +53,20 @@ function formatFileSize(bytes: number) {
   }
 
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function revokePreviewUrl(previewUrlRef: { current: string | null }) {
+  const currentUrl = previewUrlRef.current;
+
+  if (currentUrl) {
+    URL.revokeObjectURL(currentUrl);
+    previewUrlRef.current = null;
+  }
+}
+
+interface PreviewState {
+  file: File;
+  url: string;
 }
 
 function ScanCorners() {
@@ -72,15 +88,26 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  const previewUrlRef = useRef<string | null>(null);
+  const [preview, setPreview] = useState<PreviewState | null>(null);
 
   useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
+    if (!file) {
+      revokePreviewUrl(previewUrlRef);
+    }
+  }, [file]);
+
+  useEffect(() => () => revokePreviewUrl(previewUrlRef), []);
+
+  function clearPreview() {
+    revokePreviewUrl(previewUrlRef);
+    setPreview(null);
+  }
+
+  function handlePreviewError() {
+    clearPreview();
+    onFileSelect(null, PREVIEW_ERROR_MESSAGE);
+  }
 
   function handleInputChange(input: HTMLInputElement) {
     const selectedFile = input.files?.[0];
@@ -92,11 +119,31 @@ export function ImageUpload({
 
     const validationError = getImageValidationError(selectedFile);
     if (validationError) {
+      clearPreview();
       onFileSelect(null, validationError);
       return;
     }
 
+    revokePreviewUrl(previewUrlRef);
+
+    let nextPreviewUrl: string;
+
+    try {
+      nextPreviewUrl = URL.createObjectURL(selectedFile);
+    } catch {
+      setPreview(null);
+      onFileSelect(null, PREVIEW_ERROR_MESSAGE);
+      return;
+    }
+
+    previewUrlRef.current = nextPreviewUrl;
+    setPreview({ file: selectedFile, url: nextPreviewUrl });
     onFileSelect(selectedFile, null);
+  }
+
+  function handleRemove() {
+    clearPreview();
+    onRemove();
   }
 
   return (
@@ -124,7 +171,7 @@ export function ImageUpload({
         onChange={(event) => handleInputChange(event.currentTarget)}
       />
 
-      {file && previewUrl ? (
+      {file && preview && preview.file === file ? (
         <div className="grid gap-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center">
           <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-control)] border border-line bg-ink sm:size-36 sm:shrink-0">
             <ScanCorners />
@@ -132,8 +179,8 @@ export function ImageUpload({
               alt={`Vista previa de ${file.name}`}
               className="size-full object-contain"
               fill
-              priority
-              src={previewUrl}
+              onError={handlePreviewError}
+              src={preview.url}
               unoptimized
             />
           </div>
@@ -166,7 +213,7 @@ export function ImageUpload({
               <Button
                 aria-label="Eliminar radiografía seleccionada"
                 variant="ghost"
-                onClick={onRemove}
+                onClick={handleRemove}
               >
                 <X aria-hidden="true" className="size-4" />
                 Eliminar
