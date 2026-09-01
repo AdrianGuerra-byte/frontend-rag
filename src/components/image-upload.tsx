@@ -12,17 +12,9 @@ import {
 import { Camera, FileImage, ImagePlus, Upload, X } from "lucide-react";
 
 import { Button } from "@/src/components/ui/button";
+import { getImageValidationError } from "@/src/lib/image-validation";
 import { cn } from "@/src/lib/utils";
 
-export const ACCEPTED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
-] as const;
-
-const ACCEPTED_IMAGE_EXTENSIONS = new Set([".jpeg", ".jpg", ".png", ".webp"]);
-export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const DROP_ERROR_MESSAGE = "Suelte una imagen JPEG, JPG, PNG o WEBP.";
 
 interface ImageUploadProps {
@@ -30,27 +22,6 @@ interface ImageUploadProps {
   error?: string;
   onFileSelect: (file: File | null, error: string | null) => void;
   onRemove: () => void;
-}
-
-export function getImageValidationError(file: File) {
-  if (file.size === 0) {
-    return "La imagen seleccionada está vacía. Elija otro archivo.";
-  }
-
-  if (file.size > MAX_IMAGE_BYTES) {
-    return "La imagen no puede superar los 10 MB.";
-  }
-
-  const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
-  const hasAcceptedType = ACCEPTED_IMAGE_TYPES.includes(
-    file.type as (typeof ACCEPTED_IMAGE_TYPES)[number],
-  );
-
-  if (!hasAcceptedType && !ACCEPTED_IMAGE_EXTENSIONS.has(extension)) {
-    return "Seleccione una imagen JPEG, JPG, PNG o WEBP.";
-  }
-
-  return null;
 }
 
 function formatFileSize(bytes: number) {

@@ -1,15 +1,24 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore, type FormEvent } from "react";
-import { Activity } from "lucide-react";
+import { useRef, useState, type FormEvent } from "react";
+import { CircleAlert, Clock3, Info, RefreshCw, TriangleAlert, WifiOff } from "lucide-react";
 
 import { AnalysisLoading } from "@/src/components/analysis-loading";
 import { AnalysisResult } from "@/src/components/analysis-result";
 import { ClinicalForm } from "@/src/components/clinical-form";
 import { ProductMark } from "@/src/components/product-mark";
-import { SystemStatus } from "@/src/components/system-status";
 import { Button } from "@/src/components/ui/button";
-import { analyzeCase, getApiErrorMessage } from "@/src/lib/api";
+import {
+  analyzeCase,
+  getApiErrorKind,
+  getApiErrorMessage,
+  type ApiErrorKind,
+} from "@/src/lib/api";
+import {
+  createInitialClinicalFormValues,
+  validateClinicalForm,
+} from "@/src/lib/form-validation";
+import { SubmissionGate } from "@/src/lib/submission-gate";
 import { cn } from "@/src/lib/utils";
 import type {
   ClinicalAnalysis,
@@ -20,222 +29,221 @@ import type {
 
 type ViewState = "form" | "loading" | "result" | "error";
 
-type DraftField =
-  | "age"
-  | "sex"
-  | "chiefComplaint"
-  | "symptoms"
-  | "signs"
-  | "medicalHistory";
+interface ErrorDetails {
+  kind: ApiErrorKind;
+  message: string;
+}
 
-type ClinicalDraft = Pick<ClinicalFormValues, DraftField>;
-
-const DRAFT_STORAGE_KEY = "clinical-support-form-draft";
-const DRAFT_FIELDS: readonly DraftField[] = [
-  "age",
-  "sex",
-  "chiefComplaint",
-  "symptoms",
-  "signs",
-  "medicalHistory",
-];
-
-const initialValues: ClinicalFormValues = {
-  age: "",
-  sex: "",
-  chiefComplaint: "",
-  symptoms: "",
-  signs: "",
-  medicalHistory: "",
-  image: null,
+const fallbackError: ErrorDetails = {
+  kind: "backend",
+  message: "No fue posible completar la solicitud.",
 };
 
-const draftListeners = new Set<() => void>();
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function getClinicalDraft(values: ClinicalFormValues): ClinicalDraft {
-  return {
-    age: values.age,
-    sex: values.sex,
-    chiefComplaint: values.chiefComplaint,
-    symptoms: values.symptoms,
-    signs: values.signs,
-    medicalHistory: values.medicalHistory,
-  };
-}
-
-function getDraftSnapshot() {
-  try {
-    return window.sessionStorage.getItem(DRAFT_STORAGE_KEY) ?? "";
-  } catch {
-    return "";
+function getErrorPresentation(kind: ApiErrorKind) {
+  switch (kind) {
+    case "busy":
+      return {
+        title: "Análisis en espera",
+        eyebrow: "Servicio ocupado",
+        description:
+          "Hay otro análisis en proceso. Espera a que termine antes de iniciar uno nuevo.",
+        icon: Clock3,
+        tone: "border-warning/25 bg-warning-soft text-warning",
+        retryLabel: "Intentar de nuevo",
+        showRetry: true,
+        showEdit: false,
+      };
+    case "network":
+      return {
+        title: "Servicio no disponible",
+        eyebrow: "Conexión",
+        description:
+          "La solicitud no llegó al servicio de análisis. Verifica la conexión e inténtalo de nuevo.",
+        icon: WifiOff,
+        tone: "border-warning/25 bg-warning-soft text-warning",
+        retryLabel: "Reintentar conexión",
+        showRetry: true,
+        showEdit: false,
+      };
+    case "timeout":
+      return {
+        title: "La respuesta está tardando",
+        eyebrow: "Tiempo de espera",
+        description:
+          "La respuesta tardó más de lo esperado. Puedes esperar unos instantes y reintentar manualmente.",
+        icon: Clock3,
+        tone: "border-warning/25 bg-warning-soft text-warning",
+        retryLabel: "Reintentar",
+        showRetry: true,
+        showEdit: false,
+      };
+    case "validation":
+      return {
+        title: "Revisa la información del caso",
+        eyebrow: "Datos no aceptados",
+        description: "El servicio no pudo validar los datos enviados.",
+        icon: CircleAlert,
+        tone: "border-warning/25 bg-warning-soft text-warning",
+        retryLabel: "Revisar información",
+        showRetry: false,
+        showEdit: true,
+      };
+    case "invalid_file":
+      return {
+        title: "Imagen no válida",
+        eyebrow: "Archivo rechazado",
+        description: "Seleccione otra imagen que se pueda leer correctamente.",
+        icon: TriangleAlert,
+        tone: "border-danger/20 bg-danger-soft text-danger",
+        retryLabel: "Revisar archivo",
+        showRetry: false,
+        showEdit: true,
+      };
+    case "unsupported_file":
+      return {
+        title: "Formato no compatible",
+        eyebrow: "Archivo rechazado",
+        description: "Use una imagen JPEG, JPG, PNG o WEBP.",
+        icon: TriangleAlert,
+        tone: "border-danger/20 bg-danger-soft text-danger",
+        retryLabel: "Revisar archivo",
+        showRetry: false,
+        showEdit: true,
+      };
+    case "file_too_large":
+      return {
+        title: "Imagen demasiado grande",
+        eyebrow: "Archivo rechazado",
+        description: "Seleccione una imagen de 10 MB o menos.",
+        icon: TriangleAlert,
+        tone: "border-danger/20 bg-danger-soft text-danger",
+        retryLabel: "Revisar archivo",
+        showRetry: false,
+        showEdit: true,
+      };
+    case "image_unavailable":
+      return {
+        title: "Análisis de imagen no disponible",
+        eyebrow: "Apoyo visual",
+        description:
+          "No fue posible procesar la imagen en esta solicitud. Puedes intentar nuevamente de forma manual.",
+        icon: TriangleAlert,
+        tone: "border-warning/25 bg-warning-soft text-warning",
+        retryLabel: "Intentar de nuevo",
+        showRetry: true,
+        showEdit: true,
+      };
+    case "invalid_response":
+      return {
+        title: "Respuesta no válida",
+        eyebrow: "Validación del servicio",
+        description:
+          "El servicio devolvió una respuesta que no se pudo validar de forma segura.",
+        icon: CircleAlert,
+        tone: "border-danger/20 bg-danger-soft text-danger",
+        retryLabel: "Reintentar",
+        showRetry: true,
+        showEdit: false,
+      };
+    case "configuration":
+      return {
+        title: "Servicio no configurado",
+        eyebrow: "Configuración",
+        description:
+          "Este entorno no tiene configurada la conexión con el servicio de análisis.",
+        icon: Info,
+        tone: "border-warning/25 bg-warning-soft text-warning",
+        retryLabel: "Reintentar",
+        showRetry: true,
+        showEdit: false,
+      };
+    case "backend":
+    default:
+      return {
+        title: "No fue posible completar la solicitud",
+        eyebrow: "Servicio de análisis",
+        description: "El servicio no pudo completar el análisis en este momento.",
+        icon: CircleAlert,
+        tone: "border-danger/20 bg-danger-soft text-danger",
+        retryLabel: "Reintentar",
+        showRetry: true,
+        showEdit: false,
+      };
   }
-}
-
-function getServerDraftSnapshot() {
-  return "";
-}
-
-function subscribeToDraft(listener: () => void) {
-  draftListeners.add(listener);
-  return () => draftListeners.delete(listener);
-}
-
-function notifyDraftListeners() {
-  for (const listener of draftListeners) {
-    listener();
-  }
-}
-
-function parseClinicalDraft(snapshot: string) {
-  if (!snapshot) {
-    return {};
-  }
-
-  try {
-    const parsedDraft: unknown = JSON.parse(snapshot);
-    if (!isRecord(parsedDraft)) {
-      return {};
-    }
-
-    const draft: Partial<ClinicalDraft> = {};
-    for (const field of DRAFT_FIELDS) {
-      if (typeof parsedDraft[field] === "string") {
-        draft[field] = parsedDraft[field];
-      }
-    }
-
-    return draft;
-  } catch {
-    return {};
-  }
-}
-
-function mergeDraftValues(
-  values: ClinicalFormValues,
-  draft: Partial<ClinicalDraft>,
-  dirtyFields: Partial<Record<DraftField, boolean>>,
-) {
-  const mergedValues = { ...values };
-
-  for (const field of DRAFT_FIELDS) {
-    if (!dirtyFields[field] && draft[field] !== undefined) {
-      mergedValues[field] = draft[field];
-    }
-  }
-
-  return mergedValues;
-}
-
-function writeClinicalDraft(values: ClinicalFormValues) {
-  const draft = getClinicalDraft(values);
-  const hasDraftContent = DRAFT_FIELDS.some((field) => draft[field].trim().length > 0);
-
-  try {
-    if (hasDraftContent) {
-      const serializedDraft = JSON.stringify(draft);
-      if (window.sessionStorage.getItem(DRAFT_STORAGE_KEY) === serializedDraft) {
-        return;
-      }
-      window.sessionStorage.setItem(DRAFT_STORAGE_KEY, serializedDraft);
-    } else {
-      if (!window.sessionStorage.getItem(DRAFT_STORAGE_KEY)) {
-        return;
-      }
-      window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
-    }
-    notifyDraftListeners();
-  } catch {
-    // Ignore unavailable or full session storage.
-  }
-}
-
-function clearClinicalDraft() {
-  try {
-    if (!window.sessionStorage.getItem(DRAFT_STORAGE_KEY)) {
-      return;
-    }
-    window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
-    notifyDraftListeners();
-  } catch {
-    // Ignore unavailable session storage.
-  }
-}
-
-function validateForm(values: ClinicalFormValues, currentErrors: ClinicalFormErrors) {
-  const errors: ClinicalFormErrors = {};
-  const age = Number(values.age);
-
-  if (!values.age.trim()) {
-    errors.age = "Indique la edad del paciente.";
-  } else if (!Number.isInteger(age) || age < 1 || age > 120) {
-    errors.age = "Ingrese una edad entre 1 y 120 años.";
-  }
-
-  if (!values.sex) {
-    errors.sex = "Seleccione una opción.";
-  }
-
-  if (!values.chiefComplaint.trim()) {
-    errors.chiefComplaint = "Describa el motivo de consulta.";
-  }
-
-  if (!values.symptoms.trim()) {
-    errors.symptoms = "Describa los síntomas disponibles.";
-  }
-
-  if (currentErrors.image) {
-    errors.image = currentErrors.image;
-  }
-
-  return errors;
 }
 
 function ErrorState({
-  message,
+  details,
   onRetry,
+  onEditCase,
   onNewAnalysis,
 }: {
-  message: string;
+  details: ErrorDetails;
   onRetry: () => void;
+  onEditCase: () => void;
   onNewAnalysis: () => void;
 }) {
+  const presentation = getErrorPresentation(details.kind);
+  const Icon = presentation.icon;
+
   return (
     <section
       aria-labelledby="analysis-error-title"
-      className="mx-auto flex w-full max-w-xl flex-col items-center py-8 text-center sm:py-14"
+      className="mx-auto flex w-full max-w-xl flex-col py-8 sm:py-14"
     >
-      <div className="mb-8 flex w-full items-center gap-3 text-left">
+      <header className="flex items-center gap-3 border-b border-line pb-6">
         <ProductMark />
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
             Apoyo clínico / estado
           </p>
           <p className="mt-0.5 text-sm font-semibold tracking-tight text-ink">
-            Análisis no completado
+            Solicitud no completada
           </p>
         </div>
+      </header>
+
+      <div className="pt-10">
+        <div
+          className={cn(
+            "flex size-14 items-center justify-center rounded-[var(--radius-panel)] border",
+            presentation.tone,
+          )}
+        >
+          <Icon aria-hidden="true" className="size-7" />
+        </div>
+        <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+          {presentation.eyebrow}
+        </p>
+        <h1
+          className="mt-3 text-2xl font-semibold tracking-tight text-ink sm:text-3xl"
+          id="analysis-error-title"
+        >
+          {presentation.title}
+        </h1>
+        <p aria-live="assertive" className="mt-3 text-base leading-7 text-muted" role="alert">
+          {presentation.description}
+        </p>
+        {details.message !== presentation.description ? (
+          <p className="mt-3 text-sm leading-6 text-muted">{details.message}</p>
+        ) : null}
       </div>
-      <div className="flex size-14 items-center justify-center rounded-[var(--radius-panel)] border border-danger/20 bg-danger-soft text-danger">
-        <Activity aria-hidden="true" className="size-8" />
-      </div>
-      <h1
-        className="mt-6 text-2xl font-semibold tracking-tight text-ink sm:text-3xl"
-        id="analysis-error-title"
-      >
-        No fue posible completar el análisis.
-      </h1>
-      <p className="mt-3 text-base leading-7 text-muted">{message}</p>
-      <div className="mt-8 w-full border-y border-line bg-surface px-5 py-5 text-left sm:px-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button className="w-full sm:w-auto" onClick={onRetry}>
-            Reintentar
-          </Button>
-          <Button className="w-full sm:w-auto" variant="secondary" onClick={onNewAnalysis}>
-            Nuevo análisis
+
+      <div className="mt-8 border-y border-line bg-surface px-5 py-5 sm:px-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          {presentation.showRetry ? (
+            <Button className="w-full sm:w-auto" onClick={onRetry}>
+              <RefreshCw aria-hidden="true" className="size-4" />
+              {presentation.retryLabel}
+            </Button>
+          ) : null}
+          {presentation.showEdit ? (
+            <Button className="w-full sm:w-auto" onClick={onEditCase} variant="secondary">
+              {presentation.retryLabel}
+            </Button>
+          ) : null}
+          <Button className="w-full sm:w-auto" onClick={onNewAnalysis} variant="secondary">
+            Nueva evaluación
           </Button>
         </div>
       </div>
@@ -245,72 +253,65 @@ function ErrorState({
 
 export function ClinicalSupportApp() {
   const [viewState, setViewState] = useState<ViewState>("form");
-  const [values, setValues] = useState<ClinicalFormValues>(initialValues);
+  const [values, setValues] = useState<ClinicalFormValues>(createInitialClinicalFormValues);
   const [errors, setErrors] = useState<ClinicalFormErrors>({});
   const [analysis, setAnalysis] = useState<ClinicalAnalysis | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [dirtyDraftFields, setDirtyDraftFields] = useState<Partial<Record<DraftField, boolean>>>({});
-  const isSubmittingRef = useRef(false);
-  const draftSnapshot = useSyncExternalStore(
-    subscribeToDraft,
-    getDraftSnapshot,
-    getServerDraftSnapshot,
-  );
-  const storedDraft = parseClinicalDraft(draftSnapshot);
-  const formValues = mergeDraftValues(values, storedDraft, dirtyDraftFields);
-
-  const isFormIncomplete =
-    !formValues.age.trim() ||
-    !formValues.sex ||
-    !formValues.chiefComplaint.trim() ||
-    !formValues.symptoms.trim() ||
-    Boolean(errors.image);
+  const [errorDetails, setErrorDetails] = useState<ErrorDetails | null>(null);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
+  const submissionGateRef = useRef(new SubmissionGate());
 
   function handleValueChange(field: Exclude<ClinicalFormField, "image">, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
-    setDirtyDraftFields((current) => ({ ...current, [field]: true }));
     setErrors((current) => ({ ...current, [field]: undefined }));
-    writeClinicalDraft({ ...formValues, [field]: value });
+    setErrorDetails(null);
+    setFormMessage(null);
   }
 
   function handleImageSelect(file: File | null, error: string | null) {
     setValues((current) => ({ ...current, image: file }));
     setErrors((current) => ({ ...current, image: error ?? undefined }));
+    setErrorDetails(null);
+    setFormMessage(null);
   }
 
   function handleImageRemove() {
     setValues((current) => ({ ...current, image: null }));
     setErrors((current) => ({ ...current, image: undefined }));
+    setFormMessage(null);
   }
 
   async function submitAnalysis() {
-    if (isSubmittingRef.current) {
+    if (!submissionGateRef.current.acquire()) {
       return;
     }
 
-    isSubmittingRef.current = true;
-    setErrorMessage(null);
+    setErrorDetails(null);
+    setFormMessage(null);
+    setAnalysis(null);
     setViewState("loading");
 
     try {
-      const result = await analyzeCase(formValues);
-      clearClinicalDraft();
+      const result = await analyzeCase(values);
       setAnalysis(result);
       setViewState("result");
     } catch (error) {
-      setErrorMessage(getApiErrorMessage(error));
+      setErrorDetails({
+        kind: getApiErrorKind(error),
+        message: getApiErrorMessage(error),
+      });
       setViewState("error");
     } finally {
-      isSubmittingRef.current = false;
+      submissionGateRef.current.release();
     }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const nextErrors = validateForm(formValues, errors);
+    const nextErrors = validateClinicalForm(values, errors);
     setErrors(nextErrors);
 
-    if (Object.keys(nextErrors).length) {
+    if (Object.keys(nextErrors).length > 0) {
+      setErrorDetails(null);
       return;
     }
 
@@ -318,29 +319,34 @@ export function ClinicalSupportApp() {
   }
 
   function resetExperience() {
-    isSubmittingRef.current = false;
-    clearClinicalDraft();
-    setValues(initialValues);
-    setDirtyDraftFields({});
+    submissionGateRef.current.reset();
+    setValues(createInitialClinicalFormValues());
     setErrors({});
     setAnalysis(null);
-    setErrorMessage(null);
+    setErrorDetails(null);
+    setFormMessage(null);
+    setViewState("form");
+  }
+
+  function editCase() {
+    setFormMessage(errorDetails?.message ?? null);
+    setErrorDetails(null);
     setViewState("form");
   }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen w-full max-w-[820px] flex-col bg-surface md:border-x md:border-line">
-        <main aria-busy={viewState === "loading"} className="flex-1 pt-[env(safe-area-inset-top)]">
+        <main
+          aria-busy={viewState === "loading"}
+          className="flex-1 pt-[env(safe-area-inset-top)]"
+        >
           <div
             className={cn(
               "mx-auto w-full px-4 py-6 pb-8 sm:px-6 sm:py-8 sm:pb-10",
               viewState === "result" ? "max-w-[780px]" : "max-w-[680px]",
             )}
           >
-            <div aria-hidden="true" className="hidden">
-              <SystemStatus />
-            </div>
             <div
               className={cn(
                 "screen-transition",
@@ -351,9 +357,9 @@ export function ClinicalSupportApp() {
               {viewState === "form" ? (
                 <ClinicalForm
                   errors={errors}
-                  formMessage={errorMessage}
-                  isSubmitDisabled={isFormIncomplete}
-                  values={formValues}
+                  formMessage={formMessage}
+                  isSubmitDisabled={false}
+                  values={values}
                   onImageRemove={handleImageRemove}
                   onImageSelect={handleImageSelect}
                   onSubmit={handleSubmit}
@@ -364,9 +370,10 @@ export function ClinicalSupportApp() {
               {viewState === "result" && analysis ? (
                 <AnalysisResult analysis={analysis} onNewAnalysis={resetExperience} />
               ) : null}
-              {viewState === "error" && errorMessage ? (
+              {viewState === "error" ? (
                 <ErrorState
-                  message={errorMessage}
+                  details={errorDetails ?? fallbackError}
+                  onEditCase={editCase}
                   onNewAnalysis={resetExperience}
                   onRetry={() => void submitAnalysis()}
                 />

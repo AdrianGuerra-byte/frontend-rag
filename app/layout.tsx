@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Apoyo clínico",
   description:
-    "Prototipo académico de apoyo a la decisión clínica para el análisis visual de estudios radiográficos.",
+    "Prototipo académico de apoyo a la decisión clínica con información clínica y estudios radiográficos opcionales.",
   applicationName: "Apoyo clínico",
 };
 
