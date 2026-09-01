@@ -1,0 +1,19 @@
+{
+  "analysisId": "fixture-insufficient-001",
+  "clinicalSummary": "La imagen no aporta elementos suficientes para una valoración visual significativa.",
+  "imageQuality": {
+    "status": "insufficient",
+    "message": "La calidad de la imagen es insuficiente para una valoración radiográfica orientativa."
+  },
+  "possibleFindings": [],
+  "differentialDiagnoses": [],
+  "redFlags": ["No se identificaron signos de alarma con la información disponible."],
+  "missingInformation": ["Proporcionar un estudio radiográfico adecuado si está disponible."],
+  "referral": {
+    "recommended": false,
+    "priority": "not_assessed",
+    "reason": "Realizar la valoración clínica correspondiente y decidir los estudios pertinentes."
+  },
+  "sources": [],
+  "limitations": ["La imagen es insuficiente para aportar apoyo visual significativo."]
+}

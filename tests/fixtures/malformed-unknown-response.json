@@ -1,0 +1,19 @@
+{
+  "analysisId": "fixture-unknown-001",
+  "clinicalSummary": "Respuesta de prueba con un estado no conocido.",
+  "imageQuality": {
+    "status": "future_quality_state",
+    "message": "Estado no reconocido."
+  },
+  "possibleFindings": [],
+  "differentialDiagnoses": [],
+  "redFlags": [],
+  "missingInformation": [],
+  "referral": {
+    "recommended": false,
+    "priority": "not_assessed",
+    "reason": "Sin orientación."
+  },
+  "sources": [],
+  "limitations": []
+}

@@ -1,0 +1,38 @@
+{
+  "analysisId": "fixture-sources-001",
+  "clinicalSummary": "La respuesta conserva la procedencia documental proporcionada por el servicio.",
+  "imageQuality": {
+    "status": "adequate",
+    "message": "La calidad de la imagen permite una valoración orientativa."
+  },
+  "possibleFindings": [],
+  "differentialDiagnoses": [],
+  "redFlags": ["No se identificaron signos de alarma con la información disponible."],
+  "missingInformation": [],
+  "referral": {
+    "recommended": false,
+    "priority": "not_assessed",
+    "reason": "Revisar la evidencia durante la valoración clínica."
+  },
+  "sources": [
+    {
+      "title": "Primera fuente de ejemplo",
+      "source": "Fuente A",
+      "document": "fuente-a.pdf",
+      "page": 3
+    },
+    {
+      "title": "Segunda fuente de ejemplo",
+      "source": "Fuente B",
+      "document": "fuente-b.pdf",
+      "page": 7
+    },
+    {
+      "title": "Tercera fuente de ejemplo",
+      "source": "Fuente C",
+      "document": "fuente-c.pdf",
+      "page": null
+    }
+  ],
+  "limitations": []
+}

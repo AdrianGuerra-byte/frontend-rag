@@ -1,0 +1,5 @@
+{
+  "code": "ANALYSIS_BUSY",
+  "message": "El servicio está procesando otro análisis.",
+  "analysisId": "fixture-busy-001"
+}

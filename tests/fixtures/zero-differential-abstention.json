@@ -1,0 +1,20 @@
+{
+  "analysisId": "fixture-abstention-001",
+  "clinicalSummary": "El servicio se abstuvo de presentar posibilidades porque no hay evidencia suficiente.",
+  "scopeState": "supported_but_insufficient",
+  "imageQuality": {
+    "status": "limited",
+    "message": "La calidad de la imagen es limitada para una valoración detallada."
+  },
+  "possibleFindings": [],
+  "differentialDiagnoses": [],
+  "redFlags": ["No se identificaron signos de alarma con la información disponible."],
+  "missingInformation": ["Precisar los datos clínicos que permitan discriminar entre posibilidades."],
+  "referral": {
+    "recommended": false,
+    "priority": "not_assessed",
+    "reason": "Completar la valoración clínica y revisar si se requiere un estudio pertinente."
+  },
+  "sources": [],
+  "limitations": ["No se recuperó evidencia suficiente para sustentar posibilidades diagnósticas."]
+}

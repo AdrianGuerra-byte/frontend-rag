@@ -1,0 +1,40 @@
+{
+  "analysisId": "fixture-multimodal-001",
+  "clinicalSummary": "La información clínica y la imagen aportan elementos para la valoración orientativa.",
+  "imageQuality": {
+    "status": "adequate",
+    "message": "La calidad de la imagen permite una valoración orientativa."
+  },
+  "possibleFindings": [
+    {
+      "finding": "Dato clínico reportado en la fixture.",
+      "confidence": "moderate"
+    },
+    {
+      "finding": "Observación radiográfica: descripción visual de ejemplo.",
+      "confidence": "low"
+    }
+  ],
+  "differentialDiagnoses": [
+    {
+      "diagnosis": "Posibilidad clínica relacionada con la fixture",
+      "reasoning": ["La correlación requiere valoración clínica y revisión profesional de la imagen."]
+    }
+  ],
+  "redFlags": ["No se identificaron signos de alarma con la información disponible."],
+  "missingInformation": [],
+  "referral": {
+    "recommended": true,
+    "priority": "soon",
+    "reason": "Considerar valoración clínica especializada según el contexto."
+  },
+  "sources": [
+    {
+      "title": "Fuente radiográfica de ejemplo",
+      "source": "Fuente de ejemplo",
+      "document": "radiografia-ejemplo.pdf",
+      "page": 4
+    }
+  ],
+  "limitations": ["La interpretación visual es orientativa y depende de la calidad del estudio."]
+}

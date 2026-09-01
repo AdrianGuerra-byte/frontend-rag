@@ -1,0 +1,22 @@
+{
+  "analysisId": "fixture-red-flags-001",
+  "clinicalSummary": "El servicio identificó información que requiere revisión prioritaria durante la valoración.",
+  "imageQuality": {
+    "status": "not_provided",
+    "message": "No se proporcionó una imagen; el resultado se basa únicamente en la información clínica."
+  },
+  "possibleFindings": [],
+  "differentialDiagnoses": [],
+  "redFlags": [
+    "Se reportan datos compatibles con compromiso neurovascular distal.",
+    "Se reporta deformidad grave que requiere valoración pronta."
+  ],
+  "missingInformation": [],
+  "referral": {
+    "recommended": true,
+    "priority": "urgent",
+    "reason": "Realizar valoración clínica prioritaria según los signos reportados."
+  },
+  "sources": [],
+  "limitations": ["La orientación no sustituye la valoración clínica inmediata."]
+}

@@ -1,0 +1,27 @@
+{
+  "analysisId": "fixture-source-url-001",
+  "clinicalSummary": null,
+  "imageQuality": {
+    "status": "not_provided",
+    "message": "No se proporcionó una imagen; el resultado se basa únicamente en la información clínica."
+  },
+  "possibleFindings": [],
+  "differentialDiagnoses": [],
+  "redFlags": ["No se identificaron signos de alarma con la información disponible."],
+  "missingInformation": [],
+  "referral": {
+    "recommended": false,
+    "priority": "not_assessed",
+    "reason": "Realizar la valoración clínica correspondiente."
+  },
+  "sources": [
+    {
+      "title": "Fuente con enlace proporcionado",
+      "source": "Fuente de ejemplo",
+      "document": "fuente-enlace.pdf",
+      "page": 1,
+      "url": "https://example.org/documento"
+    }
+  ],
+  "limitations": []
+}

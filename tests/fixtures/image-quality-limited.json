@@ -1,0 +1,24 @@
+{
+  "analysisId": "fixture-limited-001",
+  "clinicalSummary": "La imagen fue analizada con limitaciones técnicas; la información clínica debe guiar la valoración.",
+  "imageQuality": {
+    "status": "limited",
+    "message": "La calidad de la imagen es limitada: el estudio presenta limitaciones técnicas para una valoración detallada."
+  },
+  "possibleFindings": [
+    {
+      "finding": "Observación radiográfica: elemento visual de ejemplo con respaldo limitado.",
+      "confidence": "low"
+    }
+  ],
+  "differentialDiagnoses": [],
+  "redFlags": ["No se identificaron signos de alarma con la información disponible."],
+  "missingInformation": ["Obtener una imagen con mejor calidad técnica si la valoración clínica lo requiere."],
+  "referral": {
+    "recommended": false,
+    "priority": "not_assessed",
+    "reason": "Correlacionar con la valoración clínica y decidir si se requiere un estudio adicional."
+  },
+  "sources": [],
+  "limitations": ["La calidad técnica de la imagen es limitada para una valoración detallada."]
+}

@@ -9,6 +9,7 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
+    "test": "node scripts/run-contract-tests.mjs",
     "lint": "eslint"
   },
   "dependencies": {

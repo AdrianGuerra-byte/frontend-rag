@@ -1,0 +1,4 @@
+{
+  "scenario": "network_failure",
+  "description": "El navegador no pudo establecer conexión con el servicio."
+}

@@ -1,0 +1,36 @@
+{
+  "analysisId": "fixture-text-001",
+  "clinicalSummary": "El servicio organizó la información clínica disponible para apoyar la valoración.",
+  "imageQuality": {
+    "status": "not_provided",
+    "message": "No se proporcionó una imagen; el resultado se basa únicamente en la información clínica."
+  },
+  "possibleFindings": [
+    {
+      "finding": "Dato clínico reportado en la fixture.",
+      "confidence": "moderate"
+    }
+  ],
+  "differentialDiagnoses": [
+    {
+      "diagnosis": "Posibilidad clínica de ejemplo",
+      "reasoning": ["Requiere correlación con la valoración clínica."]
+    }
+  ],
+  "redFlags": ["No se identificaron signos de alarma con la información disponible."],
+  "missingInformation": ["Precisar un dato clínico disponible para la valoración."],
+  "referral": {
+    "recommended": false,
+    "priority": "not_assessed",
+    "reason": "Realizar la valoración clínica correspondiente."
+  },
+  "sources": [
+    {
+      "title": "Documento de evidencia de ejemplo",
+      "source": "Fuente de ejemplo",
+      "document": "documento-ejemplo.pdf",
+      "page": 2
+    }
+  ],
+  "limitations": ["La respuesta depende de la información disponible."]
+}

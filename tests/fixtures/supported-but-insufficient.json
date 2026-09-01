@@ -1,0 +1,20 @@
+{
+  "analysisId": "fixture-scope-001",
+  "clinicalSummary": "El caso corresponde al alcance disponible, pero la información no permite completar la orientación.",
+  "scopeState": "supported_but_insufficient",
+  "imageQuality": {
+    "status": "not_provided",
+    "message": "No se proporcionó una imagen; el resultado se basa únicamente en la información clínica."
+  },
+  "possibleFindings": [],
+  "differentialDiagnoses": [],
+  "redFlags": ["No se identificaron signos de alarma con la información disponible."],
+  "missingInformation": ["Completar la información necesaria para precisar el caso."],
+  "referral": {
+    "recommended": false,
+    "priority": "not_assessed",
+    "reason": "Completar la valoración clínica antes de interpretar posibilidades específicas."
+  },
+  "sources": [],
+  "limitations": ["La información clínica es insuficiente para una orientación específica."]
+}
