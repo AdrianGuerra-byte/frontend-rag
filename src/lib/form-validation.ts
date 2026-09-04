@@ -13,6 +13,9 @@ export const initialClinicalFormValues: ClinicalFormValues = {
   image: null,
 };
 
+const MAX_CHIEF_COMPLAINT_LENGTH = 500;
+const MAX_CLINICAL_TEXT_LENGTH = 4000;
+
 export function createInitialClinicalFormValues(): ClinicalFormValues {
   return { ...initialClinicalFormValues };
 }
@@ -36,10 +39,22 @@ export function validateClinicalForm(
 
   if (!values.chiefComplaint.trim()) {
     errors.chiefComplaint = "Describa el motivo de consulta.";
+  } else if (values.chiefComplaint.length > MAX_CHIEF_COMPLAINT_LENGTH) {
+    errors.chiefComplaint = "El motivo de consulta no puede superar 500 caracteres.";
   }
 
   if (!values.symptoms.trim()) {
     errors.symptoms = "Describa los síntomas disponibles.";
+  } else if (values.symptoms.length > MAX_CLINICAL_TEXT_LENGTH) {
+    errors.symptoms = "Los síntomas no pueden superar 4000 caracteres.";
+  }
+
+  if (values.signs.length > MAX_CLINICAL_TEXT_LENGTH) {
+    errors.signs = "Los signos clínicos no pueden superar 4000 caracteres.";
+  }
+
+  if (values.medicalHistory.length > MAX_CLINICAL_TEXT_LENGTH) {
+    errors.medicalHistory = "Los antecedentes relevantes no pueden superar 4000 caracteres.";
   }
 
   if (currentErrors.image) {

@@ -134,8 +134,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
+function isStringArray(value: unknown, maxLength = Number.POSITIVE_INFINITY): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.length <= maxLength &&
+    value.every((item) => typeof item === "string")
+  );
 }
 
 function isKnownValue<T extends string>(value: unknown, values: readonly T[]): value is T {
@@ -254,15 +258,17 @@ export function parseAnalysisResponse(value: unknown): ClinicalAnalysis {
       typeof value.clinicalSummary !== "string") ||
     !isScopeState(value.scopeState) ||
     !Array.isArray(value.possibleFindings) ||
+    value.possibleFindings.length > 3 ||
     !value.possibleFindings.every(isPossibleFinding) ||
     !Array.isArray(value.differentialDiagnoses) ||
+    value.differentialDiagnoses.length > 3 ||
     !value.differentialDiagnoses.every(isDifferentialDiagnosis) ||
-    !isStringArray(value.redFlags) ||
-    !isStringArray(value.missingInformation) ||
+    !isStringArray(value.redFlags, 3) ||
+    !isStringArray(value.missingInformation, 6) ||
     !isReferral(value.referral) ||
     !Array.isArray(value.sources) ||
     !value.sources.every(isMedicalSource) ||
-    !isStringArray(value.limitations)
+    !isStringArray(value.limitations, 6)
   ) {
     return invalidResponse();
   }
@@ -466,8 +472,15 @@ function getApiUrl() {
     if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
       throw new Error("Unsupported API URL protocol");
     }
+    if (
+      parsedUrl.hostname === "example.com" ||
+      parsedUrl.hostname.endsWith(".example") ||
+      parsedUrl.hostname.endsWith(".example.com")
+    ) {
+      throw new Error("Placeholder API URL");
+    }
   } catch {
-    throw new ApiError(NETWORK_ERROR_MESSAGE, 0, null, "network");
+    throw new ApiError(CONFIGURATION_ERROR_MESSAGE, 0, "CONFIGURATION_ERROR", "configuration");
   }
 
   return API_URL;
