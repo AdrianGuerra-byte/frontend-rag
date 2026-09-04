@@ -334,12 +334,22 @@ export function ClinicalSupportApp() {
     setViewState("form");
   }
 
+  const isSubmitting = viewState === "loading";
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen w-full max-w-[820px] flex-col bg-surface md:border-x md:border-line">
+        <a
+          className="sr-only z-50 rounded-md bg-surface px-4 py-3 text-sm font-semibold text-primary shadow-lg focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          href="#main-content"
+        >
+          Saltar al contenido principal
+        </a>
         <main
+          id="main-content"
           aria-busy={viewState === "loading"}
-          className="flex-1 pt-[env(safe-area-inset-top)]"
+          className="flex-1 pt-[env(safe-area-inset-top)] focus:outline-none"
+          tabIndex={-1}
         >
           <div
             className={cn(
@@ -358,7 +368,7 @@ export function ClinicalSupportApp() {
                 <ClinicalForm
                   errors={errors}
                   formMessage={formMessage}
-                  isSubmitDisabled={false}
+                  isSubmitDisabled={isSubmitting}
                   values={values}
                   onImageRemove={handleImageRemove}
                   onImageSelect={handleImageSelect}

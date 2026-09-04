@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { CircleAlert, LoaderCircle, RefreshCw } from "lucide-react";
 
 import { getApiErrorKind, getHealth } from "@/src/lib/api";
+import type { HealthResponse } from "@/src/types/analysis";
 
-type Status = "checking" | "available" | "limited" | "offline" | "configuration";
+type Status = "checking" | "available" | "limited" | "busy" | "offline" | "configuration";
 
 const statusContent: Record<
   Exclude<Status, "checking">,
@@ -20,6 +21,12 @@ const statusContent: Record<
   limited: {
     label: "Servicio parcialmente disponible",
     mobileLabel: "Servicio limitado",
+    tone: "text-warning",
+    dot: "bg-warning",
+  },
+  busy: {
+    label: "Otro análisis en curso",
+    mobileLabel: "Análisis en curso",
     tone: "text-warning",
     dot: "bg-warning",
   },
@@ -41,9 +48,13 @@ function statusFromError(error: unknown): Status {
   return getApiErrorKind(error) === "configuration" ? "configuration" : "offline";
 }
 
-function statusFromHealth(health: { status: string; ollama: boolean }): Status {
+function statusFromHealth(health: HealthResponse): Status {
   if (health.status.toLowerCase() !== "ok") {
     return "offline";
+  }
+
+  if (health.analysisBusy) {
+    return "busy";
   }
 
   return health.ollama ? "available" : "limited";

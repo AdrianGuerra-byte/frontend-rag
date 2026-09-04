@@ -303,7 +303,10 @@ export function ImageUpload({
         ref={fileInputRef}
         accept=".jpeg,.jpg,.png,.webp,image/jpeg,image/jpg,image/png,image/webp"
         aria-label="Seleccionar archivo de radiografía"
+        aria-describedby={`image-upload-help${error ? " image-upload-error" : ""}`}
+        aria-invalid={Boolean(error)}
         className="sr-only"
+        tabIndex={-1}
         type="file"
         onChange={(event) => handleInputChange(event.currentTarget)}
       />
@@ -311,8 +314,11 @@ export function ImageUpload({
         ref={cameraInputRef}
         accept=".jpeg,.jpg,.png,.webp,image/jpeg,image/jpg,image/png,image/webp"
         aria-label="Tomar una fotografía de la radiografía"
+        aria-describedby={`image-upload-help${error ? " image-upload-error" : ""}`}
+        aria-invalid={Boolean(error)}
         capture="environment"
         className="sr-only"
+        tabIndex={-1}
         type="file"
         onChange={(event) => handleInputChange(event.currentTarget)}
       />
@@ -408,6 +414,8 @@ export function ImageUpload({
           <ScanCorners />
           <div
             aria-label="Adjuntar radiografía"
+            aria-describedby={`image-upload-help${error ? " image-upload-error" : ""}`}
+            aria-invalid={Boolean(error)}
             className="relative flex w-full cursor-pointer flex-col items-center rounded-[var(--radius-control)] px-4 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
             role="button"
             tabIndex={0}
@@ -446,11 +454,19 @@ export function ImageUpload({
         </div>
       )}
 
-      <p className="mt-3 border-t border-line px-1 pt-3 text-xs leading-5 text-muted">
+      <p
+        className="mt-3 border-t border-line px-1 pt-3 text-xs leading-5 text-muted"
+        id="image-upload-help"
+      >
         La calidad de la imagen puede afectar el análisis del prototipo.
       </p>
       {error ? (
-        <p aria-live="assertive" className="mt-2 text-sm font-medium text-danger" role="alert">
+        <p
+          aria-live="assertive"
+          className="mt-2 text-sm font-medium text-danger"
+          id="image-upload-error"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
