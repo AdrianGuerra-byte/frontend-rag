@@ -13,6 +13,14 @@ export interface ImageQualityPresentation {
   tone: "neutral" | "success" | "warning" | "danger";
 }
 
+export type RedFlagState = "present" | "none_identified" | "not_assessed";
+
+export interface RedFlagPresentation {
+  state: RedFlagState;
+  hasFlags: boolean;
+  flags: string[];
+}
+
 const knownImageMessages: Record<string, string> = {
   "Image can be evaluated by the prototype.":
     "La calidad de la imagen permite una valoración orientativa.",
@@ -87,15 +95,16 @@ export function getImageQualityPresentation(
 }
 
 const noRedFlagPattern =
-  /^(?:no se identificaron|no se observan|no se reportan|sin signos de alarma|no red flags)/i;
+  /^(?:no se identificaron|no se observan|no se reportan|no se encontraron|no se evidencian|no se documentan|sin signos de alarma|sin evidencia de signos de alarma|no red flags)\b/i;
 
-export function getRedFlagPresentation(redFlags: string[]) {
-  const flags = redFlags
-    .map((flag) => flag.trim())
-    .filter(Boolean)
+export function getRedFlagPresentation(redFlags: string[]): RedFlagPresentation {
+  const normalizedFlags = redFlags.map((flag) => flag.trim()).filter(Boolean);
+  const flags = normalizedFlags
     .filter((flag) => !noRedFlagPattern.test(flag));
+  const hasExplicitNegative = normalizedFlags.some((flag) => noRedFlagPattern.test(flag));
 
   return {
+    state: flags.length > 0 ? "present" : hasExplicitNegative ? "none_identified" : "not_assessed",
     hasFlags: flags.length > 0,
     flags,
   };

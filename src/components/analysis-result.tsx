@@ -184,7 +184,7 @@ function SourceItem({ source, index }: { source: MedicalSource; index: number })
         {String(index + 1).padStart(2, "0")}
       </span>
       <div className="min-w-0">
-        <p className="text-sm font-semibold leading-6 text-ink">{source.title}</p>
+        <p className="break-words text-sm font-semibold leading-6 text-ink">{source.title}</p>
         <SourceMetadata source={source} />
         {sourceUrl ? (
           <a
@@ -207,15 +207,21 @@ function buildCopySummary({
   imageQuality,
   reportedFindings,
   visualFindings,
-  redFlags,
+  redFlagPresentation,
 }: {
   analysis: ClinicalAnalysis;
   imageQuality: ReturnType<typeof getImageQualityPresentation>;
   reportedFindings: PossibleFinding[];
   visualFindings: PossibleFinding[];
-  redFlags: string[];
+  redFlagPresentation: ReturnType<typeof getRedFlagPresentation>;
 }) {
   const scope = getScopePresentation(analysis.scopeState);
+  const redFlagSummary =
+    redFlagPresentation.state === "present"
+      ? "El servicio reportó estos signos para revisión durante la valoración clínica."
+      : redFlagPresentation.state === "none_identified"
+        ? "No se identificaron signos de alarma con la información disponible."
+        : "No se comunicó una evaluación de signos de alarma en esta respuesta.";
   const lines = [
     "Informe de apoyo clínico",
     "",
@@ -252,9 +258,9 @@ function buildCopySummary({
       : [ABSTENTION_MESSAGE]),
     "",
     "Signos de alarma",
-    ...(redFlags.length
-      ? redFlags.map((flag) => `• ${flag}`)
-      : ["No se identificaron signos de alarma con la información disponible."]),
+    ...(redFlagPresentation.flags.length
+      ? [redFlagSummary, ...redFlagPresentation.flags.map((flag) => `• ${flag}`)]
+      : [redFlagSummary]),
     "",
     "Información que ayudaría a precisar el caso",
     ...(analysis.missingInformation.length
@@ -344,7 +350,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
   const copySummary = buildCopySummary({
     analysis,
     imageQuality,
-    redFlags: redFlagPresentation.flags,
+    redFlagPresentation,
     reportedFindings,
     visualFindings,
   });
@@ -376,7 +382,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
             </div>
           </div>
           <span className="hidden rounded-full border border-primary/15 bg-primary-soft px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary sm:inline-flex">
-            No diagnóstico
+            No confirmatorio
           </span>
         </div>
         <h1
@@ -514,22 +520,39 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         <div
           className={cn(
             "mt-4 rounded-[var(--radius-panel)] border p-4 sm:p-5",
-            redFlagPresentation.hasFlags ? "border-danger/25 bg-danger-soft" : "border-success/20 bg-success-soft",
+            redFlagPresentation.state === "present"
+              ? "border-danger/25 bg-danger-soft"
+              : redFlagPresentation.state === "none_identified"
+                ? "border-success/20 bg-success-soft"
+                : "border-line bg-surface-subtle",
           )}
         >
           <div className="flex items-start gap-3">
-            {redFlagPresentation.hasFlags ? (
+            {redFlagPresentation.state === "present" ? (
               <TriangleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-danger" />
-            ) : (
+            ) : redFlagPresentation.state === "none_identified" ? (
               <CheckCircle2 aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-success" />
+            ) : (
+              <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-muted" />
             )}
-            <p className={cn("text-sm leading-6", redFlagPresentation.hasFlags ? "text-danger/90" : "text-success")}>
-              {redFlagPresentation.hasFlags
+            <p
+              className={cn(
+                "text-sm leading-6",
+                redFlagPresentation.state === "present"
+                  ? "text-danger/90"
+                  : redFlagPresentation.state === "none_identified"
+                    ? "text-success"
+                    : "text-muted",
+              )}
+            >
+              {redFlagPresentation.state === "present"
                 ? "El servicio reportó estos signos para revisión durante la valoración clínica."
-                : "No se identificaron signos de alarma con la información disponible."}
+                : redFlagPresentation.state === "none_identified"
+                  ? "No se identificaron signos de alarma con la información disponible."
+                  : "No se comunicó una evaluación de signos de alarma en esta respuesta."}
             </p>
           </div>
-          {redFlagPresentation.hasFlags ? (
+          {redFlagPresentation.state === "present" ? (
             <ul className="mt-5 space-y-3 border-t border-danger/15 pt-4">
               {redFlagPresentation.flags.map((flag, index) => (
                 <li className="print-avoid-break flex gap-2 text-sm leading-6 text-danger" key={`${flag}-${index}`}>

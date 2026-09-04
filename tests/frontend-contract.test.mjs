@@ -68,6 +68,7 @@ for (const name of [
   "image-quality-limited.json",
   "image-quality-insufficient.json",
   "supported-but-insufficient.json",
+  "unsupported-scope.json",
   "zero-differential-abstention.json",
   "red-flags-present.json",
   "no-red-flags.json",
@@ -110,12 +111,21 @@ test("mapea estados de alcance solo cuando el backend los proporciona", () => {
 test("trata la frase negativa del backend como ausencia de signos de alarma", () => {
   assert.deepEqual(
     getRedFlagPresentation(fixture("no-red-flags.json").redFlags),
-    { hasFlags: false, flags: [] },
+    { state: "none_identified", hasFlags: false, flags: [] },
   );
   assert.equal(
     getRedFlagPresentation(fixture("red-flags-present.json").redFlags).hasFlags,
     true,
   );
+  assert.equal(
+    getRedFlagPresentation(fixture("red-flags-present.json").redFlags).state,
+    "present",
+  );
+  assert.deepEqual(getRedFlagPresentation([]), {
+    state: "not_assessed",
+    hasFlags: false,
+    flags: [],
+  });
 });
 
 test("expone una abstención semántica cuando no hay diferenciales", () => {
@@ -132,6 +142,23 @@ test("conserva la procedencia y solo habilita URLs HTTP(S) seguras", () => {
   assert.equal(isSafeExternalUrl("https://example.org/documento"), true);
   assert.equal(isSafeExternalUrl("javascript:alert(1)"), false);
   assert.equal(isSafeExternalUrl(undefined), false);
+  assert.equal(isSafeExternalUrl(parsed.sources[0].url), false);
+});
+
+test("rechaza arreglos que superan los máximos del contrato backend", () => {
+  const response = fixture("normal-text-only.json");
+  assert.throws(
+    () => parseAnalysisResponse({ ...response, differentialDiagnoses: [{}, {}, {}, {}] }),
+    (error) => error instanceof ApiError && error.kind === "invalid_response",
+  );
+  assert.throws(
+    () =>
+      parseAnalysisResponse({
+        ...response,
+        limitations: ["a", "b", "c", "d", "e", "f", "g"],
+      }),
+    (error) => error instanceof ApiError && error.kind === "invalid_response",
+  );
 });
 
 test("rechaza un estado de respuesta desconocido sin romper la interfaz", () => {
@@ -151,6 +178,22 @@ test("valida campos mínimos del formulario con los límites del backend", () =>
   assert.deepEqual(Object.keys(errors).sort(), ["age", "chiefComplaint", "sex", "symptoms"]);
   assert.deepEqual(validateClinicalForm(validValues({ age: "0" })), {});
   assert.notDeepEqual(validateClinicalForm(validValues({ age: "131" })), {});
+  assert.equal(
+    validateClinicalForm(validValues({ chiefComplaint: "x".repeat(501) })).chiefComplaint,
+    "El motivo de consulta no puede superar 500 caracteres.",
+  );
+  assert.equal(
+    validateClinicalForm(validValues({ symptoms: "x".repeat(4001) })).symptoms,
+    "Los síntomas no pueden superar 4000 caracteres.",
+  );
+  assert.equal(
+    validateClinicalForm(validValues({ signs: "x".repeat(4001) })).signs,
+    "Los signos clínicos no pueden superar 4000 caracteres.",
+  );
+  assert.equal(
+    validateClinicalForm(validValues({ medicalHistory: "x".repeat(4001) })).medicalHistory,
+    "Los antecedentes relevantes no pueden superar 4000 caracteres.",
+  );
 });
 
 test("valida archivo vacío, tamaño, formato y archivo aceptable", () => {
