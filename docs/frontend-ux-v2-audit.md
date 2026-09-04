@@ -1,13 +1,14 @@
 # Auditoría Frontend / UX V2
 
-Fecha de auditoría: 2026-09-01
-Frontend inicial: `406fbee`
+Fecha de auditoría: 2026-09-04
+Frontend inicial: `342c8af`
 Backend de referencia: `api-performance-v2-stable-2026-08-31` (`dbbefd2`)
 
 ## Mapa actual de arquitectura
 
-- Next.js `16.3.3` con App Router: `app/page.tsx` monta el flujo y
-  `app/layout.tsx` define idioma, metadata y viewport.
+- Next.js `16.3.3` con App Router: `app/page.tsx` monta el flujo,
+  `app/layout.tsx` define idioma, metadata y viewport, y las rutas de error
+  `app/error.tsx` y `app/not-found.tsx` mantienen mensajes seguros en español.
 - `ClinicalSupportApp` mantiene únicamente el estado efímero del formulario,
   la solicitud, el resultado y el error. No persiste datos clínicos en el
   navegador.
@@ -35,6 +36,8 @@ Backend de referencia: `api-performance-v2-stable-2026-08-31` (`dbbefd2`)
 - Informe con las ocho secciones clínicas requeridas.
 - Estados de calidad de imagen, abstención, signos de alarma, evidencia y
   limitaciones representados explícitamente.
+- Errores de ruta y de renderizado con una salida segura, sin textos internos
+  ni fallback en inglés.
 
 ### MISSING
 
@@ -45,6 +48,7 @@ Backend de referencia: `api-performance-v2-stable-2026-08-31` (`dbbefd2`)
 - Faltaba una explicación explícita de que el estado de alcance no forma parte
   de la respuesta pública estable.
 - Faltaba documentación frontend de timeout, privacidad y contrato real.
+- Faltaba una pantalla 404 en español para completar la superficie de producto.
 
 ### INCORRECT
 
