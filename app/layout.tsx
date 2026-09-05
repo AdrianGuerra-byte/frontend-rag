@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Apoyo clínico",
+  title: "RADIA",
   description:
     "Prototipo académico de apoyo a la decisión clínica con información clínica y estudios radiográficos opcionales.",
-  applicationName: "Apoyo clínico",
+  applicationName: "RADIA",
 };
 
 export const viewport: Viewport = {

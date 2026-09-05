@@ -195,7 +195,7 @@ function ErrorState({
         <ProductMark />
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-            Apoyo clínico / estado
+            RADIA / estado
           </p>
           <p className="mt-0.5 text-sm font-semibold tracking-tight text-ink">
             Solicitud no completada

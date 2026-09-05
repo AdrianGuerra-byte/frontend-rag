@@ -373,10 +373,10 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
       <header className="print-avoid-break mb-7 border-b border-line pb-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <ProductMark className="size-10" />
+            <ProductMark className="size-12" />
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
-                Apoyo clínico / informe
+                RADIA / informe
               </p>
               <p className="mt-1 text-xs font-medium text-muted">Respuesta estructurada del servicio</p>
             </div>

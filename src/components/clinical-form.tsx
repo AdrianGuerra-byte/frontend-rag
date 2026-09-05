@@ -97,10 +97,10 @@ export function ClinicalForm({
       <header className="mb-8 max-w-xl">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <ProductMark className="size-10" />
+            <ProductMark className="size-12" />
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
-                Apoyo clínico
+                RADIA
               </p>
               <p className="mt-1 text-xs font-medium text-muted">Captura clínica · caso sin guardar</p>
             </div>
