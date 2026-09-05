@@ -31,20 +31,12 @@ import type {
   ImageQualityStatus,
   MedicalSource,
   PossibleFinding,
-  ReferralPriority,
 } from "@/src/types/analysis";
 
 interface AnalysisResultProps {
   analysis: ClinicalAnalysis;
   onNewAnalysis: () => void;
 }
-
-const priorityLabels: Record<ReferralPriority, string> = {
-  urgent: "Urgente",
-  soon: "Prioritaria",
-  routine: "Ordinaria",
-  not_assessed: "No determinada",
-};
 
 const toneStyles = {
   neutral: "border-line bg-surface-subtle text-muted",
@@ -266,10 +258,6 @@ function buildCopySummary({
     ...(analysis.missingInformation.length
       ? analysis.missingInformation.map((item) => `• ${item}`)
       : ["No se señalaron datos faltantes en este análisis."]),
-    "",
-    "Siguiente paso clínico",
-    `Prioridad: ${priorityLabels[analysis.referral.priority]}`,
-    `Orientación del servicio: ${analysis.referral.reason}`,
     "",
     "Evidencia consultada",
     ...(analysis.sources.length
@@ -571,50 +559,22 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         <SectionHeading eyebrow="Completitud clínica" id="missing-information-title" index="05">
           Información que ayudaría a precisar el caso
         </SectionHeading>
-        <p className="mt-3 text-sm leading-6 text-muted">
-          Son datos faltantes o discriminantes señalados por el servicio; no representan hechos confirmados del paciente.
-        </p>
-        {analysis.missingInformation.length ? (
-          <ul className="mt-5 space-y-3">
-            {analysis.missingInformation.map((item, index) => (
-              <li className="print-avoid-break flex gap-2 text-sm leading-6 text-muted" key={`${item}-${index}`}>
-                <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-line-strong" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <EmptyMessage>No se señalaron datos faltantes en este análisis.</EmptyMessage>
-        )}
-      </section>
-
-      <section aria-labelledby="referral-title" className="print-section mt-10">
-        <SectionHeading eyebrow="Orientación" id="referral-title" index="06">
-          Siguiente paso clínico
-        </SectionHeading>
-        <div
-          className={cn(
-            "mt-4 rounded-[var(--radius-panel)] border p-4 sm:p-5",
-            analysis.referral.recommended ? "border-warning/25 bg-warning-soft" : "border-line bg-surface-subtle",
-          )}
-        >
-          <p className="text-sm font-semibold leading-6 text-ink">
-            {analysis.referral.recommended
-              ? "El servicio sugiere considerar valoración especializada."
-              : analysis.referral.priority === "not_assessed"
-                ? "El siguiente paso no fue determinado por el servicio."
-                : "El servicio no indicó una recomendación especializada."}
+        <div className="mt-4 rounded-[var(--radius-panel)] border border-line bg-surface-subtle p-4 sm:p-5">
+          <p className="text-sm leading-6 text-muted">
+            Son datos faltantes o discriminantes señalados por el servicio; no representan hechos confirmados del paciente.
           </p>
-          <dl className="mt-4 space-y-3 text-sm leading-6">
-            <div>
-              <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Prioridad comunicada</dt>
-              <dd className="mt-1 font-semibold text-ink">{priorityLabels[analysis.referral.priority]}</dd>
-            </div>
-            <div>
-              <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Orientación del servicio</dt>
-              <dd className="mt-1 text-muted">{analysis.referral.reason}</dd>
-            </div>
-          </dl>
+          {analysis.missingInformation.length ? (
+            <ul className="mt-4 space-y-3 text-sm leading-6">
+              {analysis.missingInformation.map((item, index) => (
+                <li className="print-avoid-break flex gap-2 text-muted" key={`${item}-${index}`}>
+                  <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-line-strong" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyMessage>No se señalaron datos faltantes en este análisis.</EmptyMessage>
+          )}
         </div>
       </section>
 
