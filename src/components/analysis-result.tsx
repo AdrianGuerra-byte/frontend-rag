@@ -513,6 +513,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
         )}
       </section>
 
+      {redFlagPresentation.hasFlags ? (
       <section aria-labelledby="red-flags-title" className="print-section mt-10">
         <SectionHeading eyebrow="Prioridad clínica" id="red-flags-title" index="04">
           Signos de alarma
@@ -564,6 +565,7 @@ export function AnalysisResult({ analysis, onNewAnalysis }: AnalysisResultProps)
           ) : null}
         </div>
       </section>
+      ) : null}
 
       <section aria-labelledby="missing-information-title" className="print-section mt-10">
         <SectionHeading eyebrow="Completitud clínica" id="missing-information-title" index="05">

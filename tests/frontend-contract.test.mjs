@@ -108,20 +108,20 @@ test("mapea estados de alcance solo cuando el backend los proporciona", () => {
   assert.equal(getScopePresentation(undefined), null);
 });
 
-test("trata la frase negativa del backend como ausencia de signos de alarma", () => {
-  assert.deepEqual(
-    getRedFlagPresentation(fixture("no-red-flags.json").redFlags),
-    { state: "none_identified", hasFlags: false, flags: [] },
-  );
-  assert.equal(
-    getRedFlagPresentation(fixture("red-flags-present.json").redFlags).hasFlags,
-    true,
-  );
-  assert.equal(
-    getRedFlagPresentation(fixture("red-flags-present.json").redFlags).state,
-    "present",
-  );
-  assert.deepEqual(getRedFlagPresentation([]), {
+test("muestra signos de alarma solo cuando el backend devuelve flags reales", () => {
+  const present = getRedFlagPresentation(fixture("red-flags-present.json").redFlags);
+  const noneIdentified = getRedFlagPresentation(fixture("no-red-flags.json").redFlags);
+  const notAssessed = getRedFlagPresentation([]);
+
+  assert.equal(present.state, "present");
+  assert.equal(present.hasFlags, true);
+  assert.deepEqual(present.flags, fixture("red-flags-present.json").redFlags);
+  assert.deepEqual(noneIdentified, {
+    state: "none_identified",
+    hasFlags: false,
+    flags: [],
+  });
+  assert.deepEqual(notAssessed, {
     state: "not_assessed",
     hasFlags: false,
     flags: [],
